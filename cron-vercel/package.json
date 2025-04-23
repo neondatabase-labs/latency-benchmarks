@@ -1,8 +1,9 @@
 {
   "name": "cron-script",
+  "type": "module",
   "scripts": {
-    "start": "vercel dev",
-    "deploy": "vercel"
+    "dev": "bun run api/index.ts",
+    "start": "vercel dev"
   },
   "dependencies": {
     "hono": "^4.7.7"
