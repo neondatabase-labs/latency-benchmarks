@@ -3,8 +3,8 @@ import { config } from "dotenv";
 
 config({ path: ".env" });
 
-const BENCH_DB_US_WEST_2 = process.env.BENCH_DATABASE_URL_US_WEST_2;
-const BENCH_DB_US_EAST_1 = process.env.BENCH_DATABASE_URL_US_EAST_1;
+const BENCH_DB_US_WEST_2 = process.env.BENCH_DB_US_WEST_2;
+const BENCH_DB_US_EAST_1 = process.env.BENCH_DB_US_EAST_1;
 
 interface Todo {
   id: number;
