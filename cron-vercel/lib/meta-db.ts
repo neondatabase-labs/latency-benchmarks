@@ -1,5 +1,5 @@
+import "dotenv/config";
 import { neon, NeonQueryFunction, neonConfig } from '@neondatabase/serverless';
-import { config } from "dotenv";
 
 neonConfig.poolQueryViaFetch = true;
 
