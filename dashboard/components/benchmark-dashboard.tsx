@@ -117,7 +117,7 @@ export function BenchmarkDashboard({
                     <TooltipTrigger asChild>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Info className="h-4 w-4 mr-1" />
-                        Average latency over last 30 days
+                        {functions.length} serverless functions
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>

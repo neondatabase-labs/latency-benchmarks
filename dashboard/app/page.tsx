@@ -1,6 +1,9 @@
 import { BenchmarkDashboard } from "@/components/benchmark-dashboard"
 import { getAllDatabases, getAllFunctions, getLast30DaysStats, getStatsWithDetails } from "@/lib/db"
 
+// Revalidate the page every 15 minutes
+export const revalidate = 900; // 15 minutes in seconds
+
 export default async function Home() {
   // Fetch all databases and functions first
   const [databases, functions] = await Promise.all([
