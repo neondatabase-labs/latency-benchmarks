@@ -38,10 +38,6 @@ export function QASection() {
                 <li>Database startup time (if the database was scaled to zero)</li>
                 <li>Query execution and result retrieval</li>
               </ul>
-              <p className="mt-2">
-                Note: If auto-scaling is disabled, the cold query latency will be similar to hot query latency since the database
-                remains running continuously.
-              </p>
             </AccordionContent>
           </AccordionItem>
 
