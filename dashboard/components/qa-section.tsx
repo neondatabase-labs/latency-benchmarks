@@ -75,7 +75,7 @@ export function QASection() {
               </ul>
               <p className="mt-2">
                 This results in 96 measurements per day (4 measurements per hour × 24 hours) for each function-database pair,
-                with each measurement including both a cold and hot query result.
+                with each measurement including both a cold and hot query result. The table shows the average latency over the last 30 days.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -118,6 +118,10 @@ LIMIT 100`}
                 <li>Latency in milliseconds</li>
                 <li>Query type (cold or hot)</li>
               </ul>
+              <p className="mt-2">
+                The table shows the average latency over the last 30 days, while the graphs show individual data points
+                to help visualize trends and patterns over time.
+              </p>
             </AccordionContent>
           </AccordionItem>
 

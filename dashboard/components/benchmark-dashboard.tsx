@@ -117,11 +117,11 @@ export function BenchmarkDashboard({
                     <TooltipTrigger asChild>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Info className="h-4 w-4 mr-1" />
-                        Average latency for {today}
+                        Average latency over last 30 days
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Daily average calculated from {averageRequests} requests per function</p>
+                      <p>30-day average calculated from {averageRequests * 30} requests per function</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
