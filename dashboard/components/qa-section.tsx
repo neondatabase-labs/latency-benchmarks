@@ -83,10 +83,7 @@ export function QASection() {
                 The benchmark executes a simple SELECT query that retrieves todos from the database:
               </p>
               <pre className="bg-muted p-2 rounded-md mt-2 overflow-x-auto">
-                {`SELECT id, title, completed, created_at
-FROM todos
-ORDER BY id ASC
-LIMIT 100`}
+                {`SELECT 1`}
               </pre>
               <p className="mt-2">
                 This query is intentionally simple to focus on measuring connection and network latency rather than
