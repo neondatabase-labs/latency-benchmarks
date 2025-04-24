@@ -47,12 +47,19 @@ export async function GET(request: Request) {
         // First query - cold
         console.log('Performing cold query...');
         const coldLatency = await measureLatency(db.region_code);
-        await addLatencyMeasurement(
-          currentFn.id,
-          db.id,
-          coldLatency,
-          'cold'
-        );
+        
+        // Safe-guard: Only save cold latency if it's above 100ms (indicating a cold start)
+        if (coldLatency > 100) {
+          console.log('Cold start detected, saving cold latency measurement...');
+          await addLatencyMeasurement(
+            currentFn.id,
+            db.id,
+            coldLatency,
+            'cold'
+          );
+        } else {
+          console.log('No cold start detected (latency < 100ms), skipping cold measurement...');
+        }
         
         // Second query - hot (immediately after cold)
         console.log('Performing hot query...');

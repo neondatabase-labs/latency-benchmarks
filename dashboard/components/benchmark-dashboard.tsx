@@ -9,25 +9,6 @@ import { LatencyTable } from "@/components/latency-table"
 import { LatencyGraphs } from "@/components/latency-graphs"
 import { QASection } from "@/components/qa-section"
 import { Database, Function, Stat } from "@/lib/schema"
-import { DatabaseSelector } from "./database-selector"
-
-interface DatabaseInfo {
-  id: number
-  name: string
-  provider: string
-  regionCode: string
-  regionLabel: string
-  region: string
-}
-
-interface ServerlessFunction {
-  id: number
-  name: string
-  regionCode: string
-  regionLabel: string
-  region: string
-  connectionMethod: string
-}
 
 interface LatencyData {
   cold: Record<string, Record<string, number>>
@@ -57,16 +38,8 @@ export function BenchmarkDashboard({
     initialDatabases.slice(0, 2).map((db) => db.id)
   )
 
-  // Convert database and function types to match the UI components
-  const databases: DatabaseInfo[] = initialDatabases.map(db => ({
-    ...db,
-    region: db.regionLabel
-  }))
-  
-  const functions: ServerlessFunction[] = initialFunctions.map(fn => ({
-    ...fn,
-    region: fn.regionLabel
-  }))
+  const databases = initialDatabases
+  const functions = initialFunctions
 
   const toggleDatabase = (dbId: number) => {
     setSelectedDatabases((prev) => (prev.includes(dbId) ? prev.filter((id) => id !== Number(dbId)) : [...prev, Number(dbId)]))
@@ -125,7 +98,7 @@ export function BenchmarkDashboard({
 }
 
 // Helper functions to process the database stats into the required formats
-function processLatencyData(stats: Stat[], functions: ServerlessFunction[], databases: DatabaseInfo[]): LatencyData {
+function processLatencyData(stats: Stat[], functions: Function[], databases: Database[]): LatencyData {
   const result: LatencyData = {
     cold: {},
     hot: {}
@@ -169,7 +142,7 @@ function processLatencyData(stats: Stat[], functions: ServerlessFunction[], data
   return result
 }
 
-function processHistoricalData(stats: Stat[], functions: ServerlessFunction[], databases: DatabaseInfo[]): HistoricalData {
+function processHistoricalData(stats: Stat[], functions: Function[], databases: Database[]): HistoricalData {
   const result: HistoricalData = {}
 
   // Initialize the structure for each database
