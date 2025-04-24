@@ -1,11 +1,9 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, NeonQueryFunction, neonConfig } from '@neondatabase/serverless';
 import { config } from "dotenv";
 
-config({ path: ".env" });
+neonConfig.poolQueryViaFetch = true;
 
-  if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL is not set');
-  }
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -74,6 +72,3 @@ export async function addLatencyMeasurement(
   ` as Stat[];
   return result[0];
 }
-
-
-
