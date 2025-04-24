@@ -13,7 +13,7 @@ import {
   type TooltipProps,
 } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { DatabaseInfo, ServerlessFunction, DailyLatencyData } from "@/lib/mock-data"
+import type { Database, Function, Stat } from "@/lib/schema"
 
 interface HistoricalDataPoint {
   date: string;
@@ -22,8 +22,8 @@ interface HistoricalDataPoint {
 }
 
 interface HistoricalChartProps {
-  database: DatabaseInfo;
-  functions: ServerlessFunction[];
+  database: Database;
+  functions: Function[];
   data: HistoricalDataPoint[];
 }
 
@@ -54,8 +54,8 @@ export function HistoricalChart({ database, functions, data }: HistoricalChartPr
             {payload.map((entry, index) => {
               const functionId = entry?.dataKey?.toString().split("-")[0]
               const queryTypeLabel = entry?.dataKey?.toString().split("-")[1]
-              const functionName = functions.find((f) => f.id === functionId)?.name || functionId
-              const functionRegion = functions.find((f) => f.id === functionId)?.region || ""
+              const functionName = functions.find((f) => f.id === Number(functionId))?.name || functionId
+              const functionRegion = functions.find((f) => f.id === Number(functionId))?.regionLabel || ""
 
               return (
                 <div key={index} className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export function HistoricalChart({ database, functions, data }: HistoricalChartPr
                   key={`${fn.id}-cold`}
                   type="monotone"
                   dataKey={`${fn.id}-cold`}
-                  name={`${fn.name} (${fn.region}) - Cold`}
+                  name={`${fn.name} (${fn.regionLabel}) - Cold`}
                   stroke={colors[index % colors.length]}
                   strokeDasharray="5 5"
                   dot={{ r: 2 }}
@@ -117,7 +117,7 @@ export function HistoricalChart({ database, functions, data }: HistoricalChartPr
                   key={`${fn.id}-hot`}
                   type="monotone"
                   dataKey={`${fn.id}-hot`}
-                  name={`${fn.name} (${fn.region}) - Hot`}
+                  name={`${fn.name} (${fn.regionLabel}) - Hot`}
                   stroke={colors[index % colors.length]}
                   dot={{ r: 2 }}
                   activeDot={{ r: 6 }}
@@ -150,7 +150,7 @@ export function HistoricalChart({ database, functions, data }: HistoricalChartPr
                   key={`${fn.id}-cold`}
                   type="monotone"
                   dataKey={`${fn.id}-cold`}
-                  name={`${fn.name} (${fn.region})`}
+                  name={`${fn.name} (${fn.regionLabel})`}
                   stroke={colors[index % colors.length]}
                   dot={{ r: 2 }}
                   activeDot={{ r: 6 }}
@@ -183,7 +183,7 @@ export function HistoricalChart({ database, functions, data }: HistoricalChartPr
                   key={`${fn.id}-hot`}
                   type="monotone"
                   dataKey={`${fn.id}-hot`}
-                  name={`${fn.name} (${fn.region})`}
+                  name={`${fn.name} (${fn.regionLabel})`}
                   stroke={colors[index % colors.length]}
                   dot={{ r: 2 }}
                   activeDot={{ r: 6 }}
