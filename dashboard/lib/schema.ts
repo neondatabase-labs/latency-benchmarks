@@ -5,9 +5,13 @@ import {
   integer,
   serial,
   decimal,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
+
+// Create enum for query types
+export const queryTypeEnum = pgEnum('query_type', ['cold', 'hot']);
 
 // Databases table
 export const databases = pgTable('databases', {
@@ -22,7 +26,8 @@ export const databases = pgTable('databases', {
 export const functions = pgTable('functions', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  region: varchar('region', { length: 50 }).notNull(),
+  regionCode: varchar('region_code', { length: 50 }).notNull(),
+  regionLabel: varchar('region_label', { length: 255 }).notNull(),
   connectionMethod: varchar('connection_method', { length: 50 }).notNull(),
 });
 
@@ -37,6 +42,7 @@ export const stats = pgTable('stats', {
     .references(() => databases.id)
     .notNull(),
   latencyMs: decimal('latency_ms', { precision: 10, scale: 2 }).notNull(),
+  queryType: queryTypeEnum('query_type').notNull(),
 });
 
 // Zod Schemas for type inference and validation
@@ -58,3 +64,6 @@ export type NewFunction = z.infer<typeof insertFunctionSchema>;
 
 export type Stat = z.infer<typeof selectStatSchema>;
 export type NewStat = z.infer<typeof insertStatSchema>;
+
+// Query type enum type
+export type QueryType = 'cold' | 'hot';
