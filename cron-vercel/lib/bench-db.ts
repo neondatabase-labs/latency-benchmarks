@@ -32,11 +32,10 @@ export function getBenchDb(regionCode: string): NeonQueryFunction<false, false> 
  */
 export async function measureLatency(regionCode: string): Promise<number> {
   const db = getBenchDb(regionCode);
-  const start = performance.now();
   try {
+    const start = performance.now();
     await db`SELECT 1`;
-    const end = performance.now();
-    return end - start;
+    return performance.now() - start;
   } catch (error) {
     console.error(`Error measuring latency for region ${regionCode}:`, error);
     throw error;
