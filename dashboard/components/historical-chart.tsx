@@ -15,10 +15,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { DatabaseInfo, ServerlessFunction, DailyLatencyData } from "@/lib/mock-data"
 
+interface HistoricalDataPoint {
+  date: string;
+  coldLatency: number;
+  hotLatency: number;
+}
+
 interface HistoricalChartProps {
-  database: DatabaseInfo
-  functions: ServerlessFunction[]
-  data: DailyLatencyData[]
+  database: DatabaseInfo;
+  functions: ServerlessFunction[];
+  data: HistoricalDataPoint[];
 }
 
 export function HistoricalChart({ database, functions, data }: HistoricalChartProps) {

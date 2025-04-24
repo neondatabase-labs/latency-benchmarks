@@ -1,19 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Database, ChevronLeft, ChevronRight } from "lucide-react"
+import { Database as DatabaseIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import type { DatabaseInfo } from "@/lib/mock-data"
+import type { Database } from "@/lib/schema"
 
 interface DatabaseSidebarProps {
-  databases: DatabaseInfo[]
-  selectedDatabases: string[]
-  onToggleDatabase: (dbId: string) => void
+  databases: Database[]
+  selectedDatabases: number[]
+  onToggleDatabase: (dbId: number) => void
 }
 
 export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase }: DatabaseSidebarProps) {
@@ -42,7 +42,7 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
       acc[db.provider].push(db)
       return acc
     },
-    {} as Record<string, DatabaseInfo[]>,
+    {} as Record<string, Database[]>,
   )
 
   return (
@@ -61,7 +61,7 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
       >
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className={cn("flex items-center gap-2", !isOpen && "md:hidden")}>
-            <Database className="h-5 w-5" />
+            <DatabaseIcon className="h-5 w-5" />
             <span className="font-semibold">Target Databases</span>
           </div>
           {/* Toggle button to close sidebar */}
@@ -80,7 +80,7 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
             className={cn(isOpen && "hidden", "md:flex")}
             onClick={() => setIsOpen(true)}
           >
-            <Database className="h-5 w-5" />
+            <DatabaseIcon className="h-5 w-5" />
           </Button>
         </div>
 
@@ -108,14 +108,14 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
                       )}
                     >
                       <Checkbox
-                        id={db.id}
+                        id={db.id.toString()}
                         checked={selectedDatabases.includes(db.id)}
                         onCheckedChange={() => onToggleDatabase(db.id)}
                       />
                       <div className={cn("flex-1", !isOpen && "md:hidden")}>
-                        <label htmlFor={db.id} className="flex flex-col cursor-pointer">
+                        <label htmlFor={db.id.toString()} className="flex flex-col cursor-pointer">
                           <span className="text-sm font-medium">{db.name}</span>
-                          <span className="text-xs text-muted-foreground">{db.region}</span>
+                          <span className="text-xs text-muted-foreground">{db.regionLabel}</span>
                         </label>
                       </div>
                     </div>

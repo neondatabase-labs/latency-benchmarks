@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600; // 10 minutes maximum execution time
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
     // Verify the request is coming from Vercel's cron job
     const authHeader = request.headers.get('authorization');

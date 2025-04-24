@@ -4,36 +4,42 @@ import { useState } from "react"
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Database, Function, Stat } from "@/lib/schema"
 
-// Generate mock data for the past 30 days
-const generateMockData = (databaseId: string) => {
-  const data = []
-  const today = new Date()
-
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-
-    // Generate random latency values with some patterns
-    const coldLatency = Math.floor(100 + Math.random() * 150)
-    const hotLatency = Math.floor(30 + Math.random() * 100)
-
-    // Add some spikes for visual interest
-    const hasColdSpike = Math.random() > 0.9
-    const hasHotSpike = Math.random() > 0.9
-
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      cold: hasColdSpike ? coldLatency * 1.5 : coldLatency,
-      hot: hasHotSpike ? hotLatency * 1.5 : hotLatency,
-    })
-  }
-
-  return data
+interface ChartData {
+  date: string;
+  cold: number;
+  hot: number;
 }
 
-export function LatencyChart({ databaseId }: { databaseId: string }) {
-  const [chartData] = useState(() => generateMockData(databaseId))
+interface LatencyChartProps {
+  database: Database;
+  functions: Function[];
+  stats: Stat[];
+}
+
+export function LatencyChart({ database, functions, stats }: LatencyChartProps) {
+  // Transform stats into chart data format
+  const chartData = stats.reduce((acc, stat) => {
+    const date = new Date(stat.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    const existingData = acc.find(d => d.date === date)
+    
+    if (existingData) {
+      if (stat.queryType === 'cold') {
+        existingData.cold = Number(stat.latencyMs)
+      } else {
+        existingData.hot = Number(stat.latencyMs)
+      }
+    } else {
+      acc.push({
+        date,
+        cold: stat.queryType === 'cold' ? Number(stat.latencyMs) : 0,
+        hot: stat.queryType === 'hot' ? Number(stat.latencyMs) : 0
+      })
+    }
+    
+    return acc
+  }, [] as ChartData[]).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   return (
     <Tabs defaultValue="combined">

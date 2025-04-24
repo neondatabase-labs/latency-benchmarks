@@ -2,18 +2,23 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import type { DatabaseInfo, ServerlessFunction, LatencyData } from "@/lib/mock-data"
+import type { Database, Function, Stat } from "@/lib/schema"
+
+interface LatencyData {
+  cold: Record<number, Record<number, number>>;
+  hot: Record<number, Record<number, number>>;
+}
 
 interface LatencyTableProps {
-  databases: DatabaseInfo[]
-  functions: ServerlessFunction[]
-  latencyData: LatencyData
+  databases: Database[];
+  functions: Function[];
+  latencyData: LatencyData;
 }
 
 export function LatencyTable({ databases, functions, latencyData }: LatencyTableProps) {
   // Helper function to get latency data for a specific function and database
-  const getLatency = (functionId: string, databaseId: string, queryType: "cold" | "hot") => {
-    return latencyData[queryType][functionId]?.[databaseId] || null
+  const getLatency = (functionId: number, databaseId: number, queryType: "cold" | "hot") => {
+    return latencyData[queryType][functionId]?.[databaseId] || null;
   }
 
   // Format latency value with color coding
@@ -35,8 +40,8 @@ export function LatencyTable({ databases, functions, latencyData }: LatencyTable
   }
 
   // Check if a database and function are in the same region
-  const isExactSameRegion = (db: DatabaseInfo, fn: ServerlessFunction): boolean => {
-    return db.regionCode.toLowerCase() === fn.region.toLowerCase()
+  const isExactSameRegion = (db: Database, fn: Function): boolean => {
+    return db.regionCode.toLowerCase() === fn.regionCode.toLowerCase()
   }
 
   return (
@@ -59,22 +64,20 @@ export function LatencyTable({ databases, functions, latencyData }: LatencyTable
                 <TableHead key={db.id} colSpan={2} className="text-center border-b">
                   <div className="font-medium">
                     {db.name}
-                    <div className="font-normal text-xs text-muted-foreground">{db.region}</div>
+                    <div className="font-normal text-xs text-muted-foreground">{db.regionLabel}</div>
                   </div>
                 </TableHead>
               ))}
             </TableRow>
             <TableRow>
-              {databases.map((db) => (
-                <>
-                  <TableHead key={`${db.id}-cold`} className="text-center font-medium text-sm w-[100px]">
-                    Cold
-                  </TableHead>
-                  <TableHead key={`${db.id}-hot`} className="text-center font-medium text-sm w-[100px]">
-                    Hot
-                  </TableHead>
-                </>
-              ))}
+              {databases.flatMap((db) => [
+                <TableHead key={`${db.id}-cold`} className="text-center font-medium text-sm w-[100px]">
+                  Cold
+                </TableHead>,
+                <TableHead key={`${db.id}-hot`} className="text-center font-medium text-sm w-[100px]">
+                  Hot
+                </TableHead>
+              ])}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -83,28 +86,26 @@ export function LatencyTable({ databases, functions, latencyData }: LatencyTable
                 <TableCell className="font-medium">
                   <div>
                     {fn.name}
-                    <div className="font-normal text-xs text-muted-foreground">{fn.region}</div>
+                    <div className="font-normal text-xs text-muted-foreground">{fn.regionLabel}</div>
                     <div className="font-normal text-xs text-muted-foreground mt-1">{fn.connectionMethod}</div>
                   </div>
                 </TableCell>
-                {databases.map((db) => {
+                {databases.flatMap((db) => {
                   const isSameRegionMatch = isExactSameRegion(db, fn)
-                  return (
-                    <>
-                      <TableCell
-                        key={`${fn.id}-${db.id}-cold`}
-                        className={cn("text-center", isSameRegionMatch && "bg-green-50")}
-                      >
-                        {formatLatency(getLatency(fn.id, db.id, "cold"), "cold")}
-                      </TableCell>
-                      <TableCell
-                        key={`${fn.id}-${db.id}-hot`}
-                        className={cn("text-center", isSameRegionMatch && "bg-green-50")}
-                      >
-                        {formatLatency(getLatency(fn.id, db.id, "hot"), "hot")}
-                      </TableCell>
-                    </>
-                  )
+                  return [
+                    <TableCell
+                      key={`${fn.id}-${db.id}-cold`}
+                      className={cn("text-center", isSameRegionMatch && "bg-green-50")}
+                    >
+                      {formatLatency(getLatency(fn.id, db.id, "cold"), "cold")}
+                    </TableCell>,
+                    <TableCell
+                      key={`${fn.id}-${db.id}-hot`}
+                      className={cn("text-center", isSameRegionMatch && "bg-green-50")}
+                    >
+                      {formatLatency(getLatency(fn.id, db.id, "hot"), "hot")}
+                    </TableCell>
+                  ]
                 })}
               </TableRow>
             ))}

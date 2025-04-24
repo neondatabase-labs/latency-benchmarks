@@ -13,21 +13,15 @@ export function QASection() {
             <AccordionTrigger>What does this benchmark measure?</AccordionTrigger>
             <AccordionContent>
               <p>
-                This benchmark specifically measures <strong>network latency and roundtrip times</strong> between
-                serverless functions and databases in different regions. It is <strong>not</strong> a test of database
-                performance, query optimization, or database engine capabilities.
+                This benchmark measures the latency between serverless functions and databases across different regions.
+                It specifically focuses on the roundtrip time for executing a simple query to retrieve todos from the database.
               </p>
-              <p className="mt-2">The primary factors affecting these measurements are:</p>
+              <p className="mt-2">The measurements include:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Geographic distance between the serverless function and database</li>
-                <li>Network conditions and routing</li>
-                <li>Cold start times for serverless databases</li>
-                <li>Connection establishment overhead</li>
+                <li>Network latency between function and database regions</li>
+                <li>Database connection establishment time</li>
+                <li>Query execution and result retrieval time</li>
               </ul>
-              <p className="mt-2">
-                For comprehensive database performance testing, you would need more complex queries that test CPU,
-                memory, I/O operations, and query optimization capabilities.
-              </p>
             </AccordionContent>
           </AccordionItem>
 
@@ -35,20 +29,18 @@ export function QASection() {
             <AccordionTrigger>What is a cold query?</AccordionTrigger>
             <AccordionContent>
               <p>
-                A cold query is a database query that triggers a cold start in the database. This happens when the
-                database has been idle and needs to allocate resources to handle the request. For serverless databases,
-                this typically involves starting up compute resources that have been scaled to zero.
+                A cold query is the first query executed against a database in a benchmark run. In Neon, this may trigger a database startup
+                if the database has been scaled to zero due to inactivity. This auto-scaling behavior can be configured in the Neon dashboard
+                and can also be disabled.
               </p>
-              <p className="mt-2">The latency measured here primarily reflects the time it takes to:</p>
+              <p className="mt-2">The cold query latency includes:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Allocate and initialize database compute resources</li>
-                <li>Establish a new connection</li>
-                <li>Execute a simple query</li>
-                <li>Return the results</li>
+                <li>Database startup time (if the database was scaled to zero)</li>
+                <li>Query execution and result retrieval</li>
               </ul>
               <p className="mt-2">
-                For Neon Postgres specifically, a cold query may involve starting up a compute instance that has been
-                scaled to zero, which can add several hundred milliseconds to the query time.
+                Note: If auto-scaling is disabled, the cold query latency will be similar to hot query latency since the database
+                remains running continuously.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -57,19 +49,15 @@ export function QASection() {
             <AccordionTrigger>What is a hot query?</AccordionTrigger>
             <AccordionContent>
               <p>
-                A hot query is a database query that executes when the database is already running and has resources
-                allocated. These queries typically have lower latency because:
+                A hot query is executed immediately after a cold query in the same benchmark run. It represents the best-case
+                scenario where the database is already running and ready to handle requests.
               </p>
+              <p className="mt-2">The hot query latency primarily reflects:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Database connections are already established</li>
-                <li>Compute resources are already running</li>
-                <li>Connection pools may be utilized</li>
+                <li>Network roundtrip time</li>
+                <li>Query execution time</li>
+                <li>Result retrieval time</li>
               </ul>
-              <p className="mt-2">
-                The latency measured for hot queries primarily reflects network roundtrip time and minimal query
-                processing overhead, making it a good indicator of the baseline network latency between the serverless
-                function and database.
-              </p>
             </AccordionContent>
           </AccordionItem>
 
@@ -77,57 +65,79 @@ export function QASection() {
             <AccordionTrigger>How often are benchmark requests made?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Benchmark requests are made every 15 minutes from each serverless function to each database. This
-                results in approximately 96 measurements per day for each function-database pair. Both cold and hot
-                queries are executed in sequence during each benchmark run.
+                Benchmark requests are made every 15 minutes from each serverless function to each database. This is configured
+                in the Vercel cron job settings. For each benchmark run:
               </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>One cold query is executed first</li>
+                <li>One hot query is executed immediately after</li>
+                <li>Both measurements are stored in the database</li>
+              </ul>
               <p className="mt-2">
-                For cold query testing, we ensure the database has been idle for at least 10 minutes before executing
-                the query to accurately measure cold start performance.
+                This results in 96 measurements per day (4 measurements per hour × 24 hours) for each function-database pair,
+                with each measurement including both a cold and hot query result.
               </p>
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="item-4">
-            <AccordionTrigger>How is the daily average calculated?</AccordionTrigger>
+            <AccordionTrigger>What query is being executed for the benchmark?</AccordionTrigger>
             <AccordionContent>
               <p>
-                The daily average is calculated by taking the mean of all latency measurements for a specific
-                function-database-query type combination within a 24-hour period (UTC). Outliers beyond 3 standard
-                deviations from the mean are excluded from the calculation to prevent extreme values from skewing the
-                results.
+                The benchmark executes a simple SELECT query that retrieves todos from the database:
               </p>
+              <pre className="bg-muted p-2 rounded-md mt-2 overflow-x-auto">
+                {`SELECT id, title, completed, created_at
+FROM todos
+ORDER BY id ASC
+LIMIT 100`}
+              </pre>
               <p className="mt-2">
-                For cold queries, we typically have 24 measurements per day (one per hour). For hot queries, we have
-                approximately 72 measurements per day (three per hour).
+                This query is intentionally simple to focus on measuring connection and network latency rather than
+                database processing capabilities.
               </p>
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="item-5">
-            <AccordionTrigger>What query is being executed for the benchmark?</AccordionTrigger>
+            <AccordionTrigger>How is the data stored and processed?</AccordionTrigger>
             <AccordionContent>
               <p>
-                The benchmark executes a very simple SELECT query that retrieves a small amount of data. The query is
-                intentionally lightweight to ensure we're measuring network latency and connection overhead rather than
-                database processing capabilities:
+                The benchmark system uses two types of databases:
               </p>
-              <pre className="bg-muted p-2 rounded-md mt-2 overflow-x-auto">
-                {`SELECT id, name, created_at 
-FROM users 
-WHERE id < 100 
-LIMIT 10;`}
-              </pre>
-              <p className="mt-2">This simple query ensures that:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Database processing time is minimal</li>
-                <li>The amount of data transferred is small and consistent</li>
-                <li>The query can run on any standard database without special optimizations</li>
-                <li>Results primarily reflect network latency and connection overhead</li>
+                <li>Benchmark databases: Used to measure latency in different regions</li>
+                <li>Metadata database: Stores the measurement results and configuration</li>
               </ul>
               <p className="mt-2">
-                For cold queries, we ensure the database has been idle for at least 10 minutes before executing the
-                query to accurately measure cold start times.
+                Each measurement includes:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>Timestamp of the measurement</li>
+                <li>Function and database identifiers</li>
+                <li>Latency in milliseconds</li>
+                <li>Query type (cold or hot)</li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-6">
+            <AccordionTrigger>What is the @neondatabase/serverless driver?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                The benchmark uses the @neondatabase/serverless driver, which is specifically designed for serverless environments.
+                This driver has several key characteristics:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>Uses HTTP instead of TCP for communication</li>
+                <li>Stateless by design, making it ideal for serverless functions</li>
+                <li>Does not require persistent database connections</li>
+                <li>Automatically handles connection pooling and management</li>
+              </ul>
+              <p className="mt-2">
+                While this approach prevents the use of database transactions (which require stateful TCP connections),
+                it's perfect for simple queries in serverless environments as it eliminates the need to manage database
+                connections manually.
               </p>
             </AccordionContent>
           </AccordionItem>

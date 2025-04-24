@@ -1,16 +1,16 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { HistoricalChart } from "@/components/historical-chart"
-import type { DatabaseInfo, ServerlessFunction, HistoricalData } from "@/lib/mock-data"
+import { LatencyChart } from "@/components/latency-chart"
+import type { Database, Function, Stat } from "@/lib/schema"
 
 interface LatencyGraphsProps {
-  databases: DatabaseInfo[]
-  functions: ServerlessFunction[]
-  historicalData: HistoricalData
+  databases: Database[];
+  functions: Function[];
+  stats: Stat[];
 }
 
-export function LatencyGraphs({ databases, functions, historicalData }: LatencyGraphsProps) {
+export function LatencyGraphs({ databases, functions, stats }: LatencyGraphsProps) {
   if (databases.length === 0) {
     return (
       <Card>
@@ -28,19 +28,26 @@ export function LatencyGraphs({ databases, functions, historicalData }: LatencyG
       <p className="text-muted-foreground">Individual latency datapoints for the last 30 days (not averaged)</p>
 
       <div className="space-y-6">
-        {databases.map((db) => (
-          <Card key={db.id}>
-            <CardHeader>
-              <CardTitle>{db.name}</CardTitle>
-              <CardDescription>
-                {db.provider} in {db.region} - 30-day historical latency data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HistoricalChart database={db} functions={functions} data={historicalData[db.id]} />
-            </CardContent>
-          </Card>
-        ))}
+        {databases.map((db) => {
+          const dbStats = stats.filter(stat => stat.databaseId === db.id)
+          return (
+            <Card key={db.id}>
+              <CardHeader>
+                <CardTitle>{db.name}</CardTitle>
+                <CardDescription>
+                  {db.provider} in {db.regionLabel} - 30-day historical latency data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LatencyChart 
+                  database={db} 
+                  functions={functions} 
+                  stats={dbStats}
+                />
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
