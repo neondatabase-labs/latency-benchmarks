@@ -23,7 +23,7 @@ export default async function Home() {
   const statsWithDetails = await getStatsWithDetails(combinedStats);
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="container">
       <BenchmarkDashboard 
         initialDatabases={databases}
         initialFunctions={functions}
