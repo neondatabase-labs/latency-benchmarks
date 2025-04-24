@@ -97,34 +97,13 @@ export function BenchmarkDashboard({
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">Latency Benchmark Dashboard</h1>
-              <div className="text-sm text-muted-foreground">
-                {functions.length} serverless functions
-              </div>
             </div>
-            <DatabaseSelector
-              databases={databases}
-              selectedDatabases={selectedDatabases}
-              onDatabaseSelect={setSelectedDatabases}
-            />
           </div>
 
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>Latency Comparison</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Info className="h-4 w-4 mr-1" />
-                        {functions.length} serverless functions
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>30-day average calculated from {averageRequests * 30} requests per function</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <CardTitle>30-Day Latency Averages</CardTitle>
               </div>
               <CardDescription>
                 Comparing cold and hot query latency across {selectedDatabases.length} databases and{" "}

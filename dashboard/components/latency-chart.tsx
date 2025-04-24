@@ -8,8 +8,7 @@ import type { Database, Function, Stat } from "@/lib/schema"
 
 interface ChartData {
   date: string;
-  cold: number;
-  hot: number;
+  [key: string]: number | string;  // Dynamic keys for each function's cold/hot values
 }
 
 interface LatencyChartProps {
@@ -25,21 +24,43 @@ export function LatencyChart({ database, functions, stats }: LatencyChartProps) 
     const existingData = acc.find(d => d.date === date)
     
     if (existingData) {
-      if (stat.queryType === 'cold') {
-        existingData.cold = Number(stat.latencyMs)
-      } else {
-        existingData.hot = Number(stat.latencyMs)
-      }
+      const key = `${stat.functionId}-${stat.queryType}`
+      const functionStats = stats.filter(s => 
+        new Date(s.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) === date && 
+        s.functionId === stat.functionId &&
+        s.queryType === stat.queryType
+      )
+      existingData[key] = Number((functionStats.reduce((sum, s) => sum + Number(s.latencyMs), 0) / functionStats.length).toFixed(2))
     } else {
-      acc.push({
-        date,
-        cold: stat.queryType === 'cold' ? Number(stat.latencyMs) : 0,
-        hot: stat.queryType === 'hot' ? Number(stat.latencyMs) : 0
+      const newData: ChartData = { date }
+      
+      // Initialize all function data points
+      functions.forEach(fn => {
+        const coldStats = stats.filter(s => 
+          new Date(s.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) === date && 
+          s.functionId === fn.id &&
+          s.queryType === 'cold'
+        )
+        const hotStats = stats.filter(s => 
+          new Date(s.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) === date && 
+          s.functionId === fn.id &&
+          s.queryType === 'hot'
+        )
+        
+        newData[`${fn.id}-cold`] = coldStats.length > 0 ? Number((coldStats.reduce((sum, s) => sum + Number(s.latencyMs), 0) / coldStats.length).toFixed(2)) : 0
+        newData[`${fn.id}-hot`] = hotStats.length > 0 ? Number((hotStats.reduce((sum, s) => sum + Number(s.latencyMs), 0) / hotStats.length).toFixed(2)) : 0
       })
+      
+      acc.push(newData)
     }
     
     return acc
   }, [] as ChartData[]).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  // Generate colors for each function
+  const colors = [
+    '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f', '#ffbb28', '#ff8042'
+  ]
 
   return (
     <Tabs defaultValue="combined">
@@ -59,22 +80,27 @@ export function LatencyChart({ database, functions, stats }: LatencyChartProps) 
                 <YAxis label={{ value: "Latency (ms)", angle: -90, position: "insideLeft" }} />
                 <Tooltip />
                 <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="cold"
-                  name="Cold Query"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="hot"
-                  name="Hot Query"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
-                  fillOpacity={0.3}
-                />
+                {functions.flatMap((fn, index) => [
+                  <Area
+                    key={`${fn.id}-cold`}
+                    type="monotone"
+                    dataKey={`${fn.id}-cold`}
+                    name={`${fn.name} (${fn.regionLabel}) - Cold`}
+                    stroke={colors[index % colors.length]}
+                    fill={colors[index % colors.length]}
+                    fillOpacity={0.3}
+                    strokeDasharray="5 5"
+                  />,
+                  <Area
+                    key={`${fn.id}-hot`}
+                    type="monotone"
+                    dataKey={`${fn.id}-hot`}
+                    name={`${fn.name} (${fn.regionLabel}) - Hot`}
+                    stroke={colors[index % colors.length]}
+                    fill={colors[index % colors.length]}
+                    fillOpacity={0.3}
+                  />
+                ])}
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -91,14 +117,17 @@ export function LatencyChart({ database, functions, stats }: LatencyChartProps) 
                 <YAxis label={{ value: "Latency (ms)", angle: -90, position: "insideLeft" }} />
                 <Tooltip />
                 <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="cold"
-                  name="Cold Query"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.3}
-                />
+                {functions.map((fn, index) => (
+                  <Area
+                    key={`${fn.id}-cold`}
+                    type="monotone"
+                    dataKey={`${fn.id}-cold`}
+                    name={`${fn.name} (${fn.regionLabel})`}
+                    stroke={colors[index % colors.length]}
+                    fill={colors[index % colors.length]}
+                    fillOpacity={0.3}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -115,14 +144,17 @@ export function LatencyChart({ database, functions, stats }: LatencyChartProps) 
                 <YAxis label={{ value: "Latency (ms)", angle: -90, position: "insideLeft" }} />
                 <Tooltip />
                 <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="hot"
-                  name="Hot Query"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
-                  fillOpacity={0.3}
-                />
+                {functions.map((fn, index) => (
+                  <Area
+                    key={`${fn.id}-hot`}
+                    type="monotone"
+                    dataKey={`${fn.id}-hot`}
+                    name={`${fn.name} (${fn.regionLabel})`}
+                    stroke={colors[index % colors.length]}
+                    fill={colors[index % colors.length]}
+                    fillOpacity={0.3}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

@@ -25,7 +25,7 @@ export function LatencyGraphs({ databases, functions, stats }: LatencyGraphsProp
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Historical Performance</h2>
-      <p className="text-muted-foreground">Individual latency datapoints for the last 30 days (not averaged)</p>
+      <p className="text-muted-foreground">Daily latency averages over the last 30 days</p>
 
       <div className="space-y-6">
         {databases.map((db) => {
@@ -35,7 +35,7 @@ export function LatencyGraphs({ databases, functions, stats }: LatencyGraphsProp
               <CardHeader>
                 <CardTitle>{db.name}</CardTitle>
                 <CardDescription>
-                  {db.provider} in {db.regionLabel} - 30-day historical latency data
+                  {db.regionLabel}
                 </CardDescription>
               </CardHeader>
               <CardContent>
