@@ -34,12 +34,14 @@ async function main() {
         name: "Vercel Serverless",
         regionCode: "us-west-2",
         regionLabel: "Portland, USA (West) - us-west-2 - pdx1",
+        vercelRegionCode: "pdx1",
         connectionMethod: "@neondatabase/serverless (w/ connection pooling)",
       },
       {
         name: "Vercel Serverless",
         regionCode: "us-east-1",
         regionLabel: "Washington, D.C., USA (East) - us-east-1 - iad1",
+        vercelRegionCode: "iad1",
         connectionMethod: "@neondatabase/serverless (w/ connection pooling)",
       },
     ];

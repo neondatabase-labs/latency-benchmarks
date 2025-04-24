@@ -22,6 +22,7 @@ interface Function {
   name: string;
   region_code: string;
   region_label: string;
+  vercel_region_code: string;
   connection_method: string;
 }
 
@@ -50,7 +51,7 @@ export async function getAllDatabases(): Promise<Database[]> {
  */
 export async function getFunctionByRegionCode(regionCode: string): Promise<Function> {
   const result = await sql`
-    SELECT id, name, region_code, region_label, connection_method
+    SELECT id, name, region_code, region_label, vercel_region_code, connection_method
     FROM functions
     WHERE region_code = ${regionCode}
   ` as Function[];

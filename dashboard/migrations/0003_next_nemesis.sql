@@ -1,0 +1,1 @@
+ALTER TABLE "functions" ADD COLUMN "vercel_region_code" varchar(50) NOT NULL;

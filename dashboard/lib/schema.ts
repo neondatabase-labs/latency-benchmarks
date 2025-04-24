@@ -28,6 +28,7 @@ export const functions = pgTable('functions', {
   name: varchar('name', { length: 255 }).notNull(),
   regionCode: varchar('region_code', { length: 50 }).notNull(),
   regionLabel: varchar('region_label', { length: 255 }).notNull(),
+  vercelRegionCode: varchar('vercel_region_code', { length: 50 }).notNull(),
   connectionMethod: varchar('connection_method', { length: 50 }).notNull(),
 });
 

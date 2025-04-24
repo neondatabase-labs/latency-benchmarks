@@ -21,9 +21,20 @@ export async function GET(request: Request) {
       throw new Error('FUNCTION_REGION_CODE is not set');
     }
 
+    // Get the current Vercel region
+    const currentVercelRegion = process.env.VERCEL_REGION;
+    if (!currentVercelRegion) {
+      throw new Error('Not running in Vercel environment (VERCEL_REGION not set)');
+    }
+
     const currentFn = await getFunctionByRegionCode(fnRegionCode);
     if(!currentFn) {
-        throw new Error(`Function with region code ${fnRegionCode} not found`);
+      throw new Error(`Function with region code ${fnRegionCode} not found`);
+    }
+
+    // Verify we're running in the expected Vercel region
+    if (currentFn.vercel_region_code !== currentVercelRegion) {
+      throw new Error(`Function executing in unexpected Vercel region. Expected: ${currentFn.vercel_region_code}, Actual: ${currentVercelRegion}`);
     }
 
     // Get all databases
