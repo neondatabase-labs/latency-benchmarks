@@ -65,7 +65,6 @@ export function LatencyTable({ databases, functions, latencyData }: LatencyTable
                   <div className="font-medium">
                     {db.name}
                     <div className="font-normal text-xs text-muted-foreground">{db.regionLabel}</div>
-                    <div className="font-normal text-xs text-muted-foreground">30-day average</div>
                   </div>
                 </TableHead>
               ))}
