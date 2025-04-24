@@ -1,5 +1,7 @@
-import { neon, NeonQueryFunction } from '@neondatabase/serverless';
+import { neon, NeonQueryFunction, neonConfig } from '@neondatabase/serverless';
 import { config } from "dotenv";
+
+neonConfig.poolQueryViaFetch = true;
 
 config({ path: ".env" });
 
