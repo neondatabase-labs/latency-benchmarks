@@ -192,7 +192,7 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
                             className="flex flex-col cursor-pointer"
                           >
                             <span className="text-sm font-medium">{group.regionLabel}</span>
-                            <span className="text-xs text-muted-foreground">{group.connectionMethod}</span>
+                            <span className="text-xs text-muted-foreground">@neondatabase/serverless {group.connectionMethod === 'http' ? 'http' : 'websocket'}</span>
                           </label>
                         </div>
                       </div>
