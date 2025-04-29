@@ -1,43 +1,38 @@
 import "dotenv/config";
-import { neon, NeonQueryFunction, neonConfig } from '@neondatabase/serverless';
+import { neon, neonConfig } from '@neondatabase/serverless';
+import { Pool } from '@neondatabase/serverless';
 
-neonConfig.poolQueryViaFetch = true;
-
-const BENCH_DB_US_WEST_2 = process.env.BENCH_DB_US_WEST_2;
-const BENCH_DB_US_EAST_1 = process.env.BENCH_DB_US_EAST_1;
-
-interface Todo {
-  id: number;
-  title: string;
-  created_at: Date;
-  completed: boolean;
+interface BenchDbConfig {
+  connectionUrl: string;
+  connectionMethod: string;
 }
 
-export function getBenchDb(regionCode: string): NeonQueryFunction<false, false> {
-  let dbUrl = '';
-  if (regionCode === "us-west-2") {
-    dbUrl = BENCH_DB_US_WEST_2 || '';
-  } else if (regionCode === "us-east-1") {
-    dbUrl = BENCH_DB_US_EAST_1 || '';
+export function getBenchDb({ connectionUrl, connectionMethod }: BenchDbConfig) {
+  if (!connectionUrl) {
+    throw new Error('Connection URL is required');
   }
-  if (!dbUrl) {
-    throw new Error(`BENCH_DATABASE_URL_${regionCode} is not set`);
+
+  if (connectionMethod === 'ws') {
+    return new Pool({ connectionString: connectionUrl });
   }
-  return neon(dbUrl);
+
+  neonConfig.webSocketConstructor = undefined;
+  return neon(connectionUrl);
 }
 
-/**
- * Measure the latency of querying todos
- * Returns the latency in milliseconds
- */
-export async function measureLatency(regionCode: string): Promise<number> {
-  const db = getBenchDb(regionCode);
+export async function measureLatency(connectionUrl: string, connectionMethod: 'ws' | 'http'): Promise<number> {
+  const client = getBenchDb({ connectionUrl, connectionMethod });
+  
   try {
-    const start = performance.now();
-    await db`SELECT 1`;
-    return performance.now() - start;
+    const startTime = performance.now();
+    if (client instanceof Pool) {
+      await client.query('SELECT 1');
+    } else {
+      await client`SELECT 1`;
+    }
+    return performance.now() - startTime;
   } catch (error) {
-    console.error(`Error measuring latency for region ${regionCode}:`, error);
+    console.error(`Error measuring latency:`, error);
     throw error;
   }
 }

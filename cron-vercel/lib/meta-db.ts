@@ -1,7 +1,5 @@
 import "dotenv/config";
-import { neon, NeonQueryFunction, neonConfig } from '@neondatabase/serverless';
-
-neonConfig.poolQueryViaFetch = true;
+import { neon } from '@neondatabase/serverless';
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
@@ -13,15 +11,19 @@ interface Database {
   provider: string;
   region_code: string;
   region_label: string;
+  connection_method: 'ws' | 'http';
+  connection_url: string;
+  neon_project_id: string;
 }
+
+type Platform = 'vercel';
 
 interface Function {
   id: number;
   name: string;
   region_code: string;
   region_label: string;
-  vercel_region_code: string;
-  connection_method: string;
+  platform: Platform;
 }
 
 interface Stat {
@@ -34,12 +36,13 @@ interface Stat {
 }
 
 /**
- * Fetch all databases
+ * Fetch all databases for a specific function
  */
-export async function getAllDatabases(): Promise<Database[]> {
+export async function getAllDatabases(functionId: number): Promise<Database[]> {
   const result = await sql`
-    SELECT id, name, provider, region_code, region_label
+    SELECT id, name, provider, region_code, region_label, connection_method, connection_url, neon_project_id
     FROM databases
+    WHERE function_id = ${functionId}
   ` as Database[];
   return result;
 }
@@ -49,7 +52,7 @@ export async function getAllDatabases(): Promise<Database[]> {
  */
 export async function getFunctionByRegionCode(regionCode: string): Promise<Function> {
   const result = await sql`
-    SELECT id, name, region_code, region_label, vercel_region_code, connection_method
+    SELECT id, name, region_code, region_label, platform
     FROM functions
     WHERE region_code = ${regionCode}
   ` as Function[];

@@ -5,15 +5,23 @@ import { getAllDatabases, getAllFunctions, getLast30DaysStats, getStatsWithDetai
 export const revalidate = 900; // 15 minutes in seconds
 
 export default async function Home() {
-  // Fetch all databases and functions first
-  const [databases, functions] = await Promise.all([
-    getAllDatabases(),
-    getAllFunctions()
-  ]);
+  // Fetch all functions first
+  const functions = await getAllFunctions();
+
+  // For each function, fetch its associated databases
+  const databasesByFunction = await Promise.all(
+    functions.map(async (fn) => {
+      const databases = await getAllDatabases(fn.id);
+      return { function: fn, databases };
+    })
+  );
+
+  // Flatten all databases into a single array
+  const allDatabases = databasesByFunction.flatMap(({ databases }) => databases);
 
   // Fetch stats for all databases
   const allStats = await Promise.all(
-    databases.map(db => getLast30DaysStats(db.id))
+    allDatabases.map(db => getLast30DaysStats(db.id))
   );
 
   // Combine all stats into a single array
@@ -23,9 +31,9 @@ export default async function Home() {
   const statsWithDetails = await getStatsWithDetails(combinedStats);
 
   return (
-    <main className="container">
+    <main>
       <BenchmarkDashboard 
-        initialDatabases={databases}
+        initialDatabases={allDatabases}
         initialFunctions={functions}
         initialStats={statsWithDetails}
       />

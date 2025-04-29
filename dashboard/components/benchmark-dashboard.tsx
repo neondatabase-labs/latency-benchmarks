@@ -34,9 +34,7 @@ export function BenchmarkDashboard({
   initialFunctions, 
   initialStats 
 }: BenchmarkDashboardProps) {
-  const [selectedDatabases, setSelectedDatabases] = useState<number[]>(
-    initialDatabases.slice(0, 2).map((db) => db.id)
-  )
+  const [selectedDatabases, setSelectedDatabases] = useState<number[]>([])
 
   const databases = initialDatabases
   const functions = initialFunctions
@@ -55,8 +53,6 @@ export function BenchmarkDashboard({
     day: "numeric",
   })
 
-  const averageRequests = 96 // 4 requests per hour for 24 hours
-
   return (
     <div className="flex min-h-screen bg-background">
       <DatabaseSidebar
@@ -65,8 +61,8 @@ export function BenchmarkDashboard({
         onToggleDatabase={toggleDatabase}
       />
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex-1 p-6" style={{ minWidth: 0 }}>
+        <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">Latency Benchmark Dashboard</h1>
@@ -83,14 +79,13 @@ export function BenchmarkDashboard({
                 {functions.length} serverless functions
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <LatencyTable databases={filteredDatabases} functions={functions} latencyData={latencyData} />
+            <CardContent className="p-0">
+              <div className="overflow-x-auto m-4">
+                <LatencyTable databases={filteredDatabases} functions={functions} latencyData={latencyData} />
+              </div>
             </CardContent>
           </Card>
-
           <QASection />
-
-          <LatencyGraphs databases={filteredDatabases} functions={functions} stats={initialStats} />
         </div>
       </div>
     </div>

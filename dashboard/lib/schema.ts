@@ -6,12 +6,18 @@ import {
   serial,
   decimal,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-// Create enum for query types
+// Create enums
 export const queryTypeEnum = pgEnum('query_type', ['cold', 'hot']);
+export const platformEnum = pgEnum('platform', ['vercel']);
+export const connectionMethodEnum = pgEnum('connection_method', [
+  'http',
+  'ws',
+]);
 
 // Databases table
 export const databases = pgTable('databases', {
@@ -20,6 +26,16 @@ export const databases = pgTable('databases', {
   provider: varchar('provider', { length: 50 }).notNull(),
   regionCode: varchar('region_code', { length: 50 }).notNull(),
   regionLabel: varchar('region_label', { length: 255 }).notNull(),
+  functionId: integer('function_id')
+    .references(() => functions.id)
+    .notNull(),
+  connectionMethod: connectionMethodEnum('connection_method').notNull(),
+  connectionUrl: varchar('connection_url', { length: 255 }).notNull(),
+  neonProjectId: varchar('neon_project_id', { length: 255 }).notNull(),
+}, (table) => {
+  return {
+    uniqueFunctionConnectionRegion: unique().on(table.functionId, table.connectionMethod, table.regionCode),
+  };
 });
 
 // Functions table
@@ -28,8 +44,7 @@ export const functions = pgTable('functions', {
   name: varchar('name', { length: 255 }).notNull(),
   regionCode: varchar('region_code', { length: 50 }).notNull(),
   regionLabel: varchar('region_label', { length: 255 }).notNull(),
-  vercelRegionCode: varchar('vercel_region_code', { length: 50 }).notNull(),
-  connectionMethod: varchar('connection_method', { length: 50 }).notNull(),
+  platform: platformEnum('platform').notNull(),
 });
 
 // Stats table

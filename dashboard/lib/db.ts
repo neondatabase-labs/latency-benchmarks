@@ -10,10 +10,10 @@ const sql = neon(process.env.DATABASE_URL!);
 export const db = drizzle(sql);
 
 /**
- * Get all databases
+ * Get all databases for a specific function
  */
-export async function getAllDatabases(): Promise<Database[]> {
-  return await db.select().from(databases);
+export async function getAllDatabases(functionId: number): Promise<Database[]> {
+  return await db.select().from(databases).where(eq(databases.functionId, functionId));
 }
 
 /**
