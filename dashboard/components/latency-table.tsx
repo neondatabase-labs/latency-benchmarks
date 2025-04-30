@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,15 @@ interface LatencyTableProps {
 type QueryType = "both" | "cold" | "hot";
 type RegionFilter = "all" | "matching";
 
-export function LatencyTable({ databases, functions, latencyData }: LatencyTableProps) {
+export function LatencyTable(props: LatencyTableProps) {
+  return (
+    <Suspense fallback={<div>Loading table...</div>}>
+      <LatencyTableClient {...props} />
+    </Suspense>
+  )
+}
+
+function LatencyTableClient({ databases, functions, latencyData }: LatencyTableProps) {
   const searchParams = useSearchParams()
   
   const [queryType, setQueryType] = useState<QueryType>(() => {
