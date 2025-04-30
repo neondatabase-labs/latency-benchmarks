@@ -234,7 +234,7 @@ export function DatabaseSidebar({
         <ScrollArea className="h-[calc(100vh-4rem)]">
           <div className="p-4">
             <div className={cn("mb-4", !isOpen && "md:hidden")}>
-              <p className="text-sm text-muted-foreground">Select databases to compare their performance</p>
+              <p className="text-sm text-muted-foreground">Select databases to compare</p>
             </div>
 
             <div className={cn("mb-4", !isOpen && "md:hidden")}>
