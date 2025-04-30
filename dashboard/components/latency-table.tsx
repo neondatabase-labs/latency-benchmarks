@@ -355,7 +355,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                     <div className="font-medium break-words text-sm">
                       {group.regionLabel}
                       <div className="font-normal text-xs text-muted-foreground mt-1 break-all">
-                        {group.regionCode} via<br />@neondatabase/serverless {group.connectionMethod === 'http' ? 'http' : 'websocket'}
+                        {group.regionCode} via<br />@neondatabase/serverless{" "}{group.connectionMethod === 'http' ? <strong>http</strong> : <strong>websocket</strong>}
                       </div>
                     </div>
                   </TableHead>
@@ -422,7 +422,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-cold`}
                           className={cn(
                             "text-center w-full min-w-[200px]", 
-                            isSameRegionMatch && "bg-green-50",
+                            isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
                             groupIndex !== 0 && "border-l-2 border-l-muted"
                           )}
                         >
@@ -436,7 +436,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-hot`}
                           className={cn(
                             "text-center w-full min-w-[200px]", 
-                            isSameRegionMatch && "bg-green-50",
+                            isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
                             queryType === "both" && "border-l",
                             groupIndex !== 0 && queryType !== "both" && "border-l-2 border-l-muted"
                           )}

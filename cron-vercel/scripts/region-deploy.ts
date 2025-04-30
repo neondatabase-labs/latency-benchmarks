@@ -106,7 +106,16 @@ async function main() {
 
   // Run vercel deploy
   console.log('\nRunning vercel deploy...');
-  await $`npx vercel deploy --prebuilt --prod`;
+  if(process.env.VERCEL_TOKEN) {
+    // CI/CD
+    const token = process.env.VERCEL_TOKEN;
+    const orgId = process.env.VERCEL_ORG_ID;
+    const projectId = process.env.VERCEL_PROJECT_ID;
+    await $`npx vercel deploy --prebuilt --prod --token=${token} --org-id=${orgId} --project-id=${projectId}`;
+  } else {
+    // Locally using vercel login
+    await $`npx vercel deploy --prebuilt --prod`;
+  }
 
   console.log('Region configuration completed successfully!');
 }
