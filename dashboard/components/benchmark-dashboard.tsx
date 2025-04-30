@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -34,7 +35,38 @@ export function BenchmarkDashboard({
   initialFunctions, 
   initialStats 
 }: BenchmarkDashboardProps) {
-  const [selectedDatabases, setSelectedDatabases] = useState<number[]>([])
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  // Initialize selectedDatabases from URL query param or default to empty array
+  const [selectedDatabases, setSelectedDatabases] = useState<number[]>(() => {
+    const dbParam = searchParams.get('databases')
+    return dbParam === 'all' ? initialDatabases.map(db => db.id) : 
+           dbParam ? dbParam.split(',').map(Number) : []
+  })
+
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams.toString())
+    
+    if (selectedDatabases.length === 0) {
+      newParams.set('databases', 'all')
+      const newSelectedDatabases = initialDatabases.map(db => db.id)
+      setSelectedDatabases(newSelectedDatabases)
+    } else if (selectedDatabases.length === initialDatabases.length) {
+      newParams.set('databases', 'all')
+    } else {
+      newParams.set('databases', selectedDatabases.join(','))
+    }
+    
+    if (!newParams.has('queries')) {
+      newParams.set('queries', 'all')
+    }
+    if (!newParams.has('regions')) {
+      newParams.set('regions', 'all')
+    }
+    
+    window.history.replaceState({}, '', `?${newParams.toString()}`)
+  }, [selectedDatabases, searchParams, initialDatabases])
 
   const databases = initialDatabases
   const functions = initialFunctions
