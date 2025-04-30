@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -27,9 +28,44 @@ interface LatencyTableProps {
 type QueryType = "both" | "cold" | "hot";
 type RegionFilter = "all" | "matching";
 
-export function LatencyTable({ databases, functions, latencyData }: LatencyTableProps) {
-  const [queryType, setQueryType] = useState<QueryType>("both");
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
+export function LatencyTable(props: LatencyTableProps) {
+  return (
+    <Suspense fallback={<div>Loading table...</div>}>
+      <LatencyTableClient {...props} />
+    </Suspense>
+  )
+}
+
+function LatencyTableClient({ databases, functions, latencyData }: LatencyTableProps) {
+  const searchParams = useSearchParams()
+  
+  const [queryType, setQueryType] = useState<QueryType>(() => {
+    const param = searchParams.get('queries')
+    if (param === 'cold') return 'cold'
+    if (param === 'hot') return 'hot'
+    return 'both' // Default is 'both' ('all')
+  })
+  
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => {
+    const param = searchParams.get('regions')
+    return param === 'match' ? 'matching' : 'all' // Default is 'all'
+  })
+  
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams.toString())
+    
+    const queryParamValue = queryType === 'both' ? 'all' : queryType
+    const regionParamValue = regionFilter === 'matching' ? 'match' : 'all'
+    
+    newParams.set('queries', queryParamValue)
+    newParams.set('regions', regionParamValue)
+    
+    if (!newParams.has('databases')) {
+      newParams.set('databases', 'all')
+    }
+    
+    window.history.replaceState({}, '', `?${newParams.toString()}`)
+  }, [queryType, regionFilter, searchParams])
 
   // Group databases by region and connection method
   const regionGroups = databases.reduce((groups, db) => {

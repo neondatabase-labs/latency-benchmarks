@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Info } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -29,23 +30,60 @@ interface BenchmarkDashboardProps {
   initialStats: Stat[]
 }
 
-export function BenchmarkDashboard({ 
+export function BenchmarkDashboard(props: BenchmarkDashboardProps) {
+  return (
+    <Suspense fallback={<div>Loading dashboard...</div>}>
+      <BenchmarkDashboardClient {...props} />
+    </Suspense>
+  )
+}
+
+function BenchmarkDashboardClient({ 
   initialDatabases, 
   initialFunctions, 
   initialStats 
 }: BenchmarkDashboardProps) {
-  const [selectedDatabases, setSelectedDatabases] = useState<number[]>([])
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  // Initialize selectedDatabases from URL query param or default to empty array
+  const [selectedDatabases, setSelectedDatabases] = useState<number[]>(() => {
+    const dbParam = searchParams.get('databases')
+    return dbParam === 'all' ? initialDatabases.map(db => db.id) : 
+           dbParam ? dbParam.split(',').map(Number) : []
+  })
 
-  const databases = initialDatabases
-  const functions = initialFunctions
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams.toString())
+    
+    if (selectedDatabases.length === 0) {
+      newParams.set('databases', 'all')
+      const newSelectedDatabases = initialDatabases.map(db => db.id)
+      setSelectedDatabases(newSelectedDatabases)
+    } else if (selectedDatabases.length === initialDatabases.length) {
+      newParams.set('databases', 'all')
+    } else {
+      newParams.set('databases', selectedDatabases.join(','))
+    }
+    
+    if (!newParams.has('queries')) {
+      newParams.set('queries', 'all')
+    }
+    if (!newParams.has('regions')) {
+      newParams.set('regions', 'all')
+    }
+    
+    window.history.replaceState({}, '', `?${newParams.toString()}`)
+  }, [selectedDatabases, searchParams, initialDatabases])
+
 
   const toggleDatabase = (dbId: number) => {
     setSelectedDatabases((prev) => (prev.includes(dbId) ? prev.filter((id) => id !== Number(dbId)) : [...prev, Number(dbId)]))
   }
 
-  const filteredDatabases = databases.filter((db) => selectedDatabases.includes(db.id))
-  const latencyData = processLatencyData(initialStats, functions, databases)
-  const historicalData = processHistoricalData(initialStats, functions, databases)
+  const filteredDatabases = initialDatabases.filter((db) => selectedDatabases.includes(db.id))
+  const latencyData = processLatencyData(initialStats, initialFunctions, initialDatabases)
+  const historicalData = processHistoricalData(initialStats, initialFunctions, initialDatabases)
 
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -56,7 +94,7 @@ export function BenchmarkDashboard({
   return (
     <div className="flex min-h-screen bg-background">
       <DatabaseSidebar
-        databases={databases}
+        databases={initialDatabases}
         selectedDatabases={selectedDatabases}
         onToggleDatabase={toggleDatabase}
       />
@@ -76,12 +114,12 @@ export function BenchmarkDashboard({
               </div>
               <CardDescription>
                 Comparing cold and hot query latency across {selectedDatabases.length} databases and{" "}
-                {functions.length} serverless functions
+                {initialFunctions.length} serverless functions
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto m-4">
-                <LatencyTable databases={filteredDatabases} functions={functions} latencyData={latencyData} />
+                <LatencyTable databases={filteredDatabases} functions={initialFunctions} latencyData={latencyData} />
               </div>
             </CardContent>
           </Card>
