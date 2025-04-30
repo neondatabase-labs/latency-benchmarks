@@ -249,8 +249,8 @@ function LatencyTableClient({ databases, functions, latencyData }: LatencyTableP
           </Button>
         </div>
       </div>
-
-      <div className="rounded-md border max-h-[80vh]">
+      <div className="max-h-[80vh]">
+      <div className="rounded-md border">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-20">
               <TableRow>
@@ -383,6 +383,7 @@ function LatencyTableClient({ databases, functions, latencyData }: LatencyTableP
               ))}
             </TableBody>
           </Table>
+      </div>
       </div>
     </div>
   )
