@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Database as DatabaseIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ interface DatabaseSidebarProps {
   databases: Database[]
   selectedDatabases: number[]
   onToggleDatabase: (dbId: number) => void
+  onUpdateConnectionFilter?: (filter: string) => void
 }
 
 interface RegionGroup {
@@ -22,9 +24,36 @@ interface RegionGroup {
   databases: Database[]
 }
 
-export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase }: DatabaseSidebarProps) {
+export function DatabaseSidebar({ 
+  databases, 
+  selectedDatabases, 
+  onToggleDatabase,
+  onUpdateConnectionFilter 
+}: DatabaseSidebarProps) {
   const [isOpen, setIsOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const searchParams = useSearchParams()
+  const connectionFilter = searchParams.get('connection') || 'http'
+
+  // Effect to sync databases selection with connection filter
+  useEffect(() => {
+    if (!onUpdateConnectionFilter) return;
+    
+    // Skip this effect if we're showing all connection methods
+    if (connectionFilter === 'all') return;
+    
+    // Find all databases that don't match the current connection filter
+    const mismatchedDatabases = databases.filter(db => 
+      db.connectionMethod !== connectionFilter && selectedDatabases.includes(db.id)
+    );
+    
+    // If there are any selected databases that don't match the filter, deselect them
+    if (mismatchedDatabases.length > 0) {
+      mismatchedDatabases.forEach(db => {
+        onToggleDatabase(db.id);
+      });
+    }
+  }, [connectionFilter, databases, selectedDatabases, onToggleDatabase, onUpdateConnectionFilter]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -52,36 +81,116 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
     {} as Record<string, Database[]>,
   );
 
-  // For Neon Postgres, further group by unique region + connection method combinations
+  // For Neon Postgres, first group by connection method, then by region
   const processedGroups = Object.entries(groupedByProvider).reduce(
     (acc, [provider, dbs]) => {
       if (provider === 'Neon Postgres') {
-        // Create unique region groups
-        const regionGroups = dbs.reduce((groups, db) => {
-          const key = `${db.regionLabel}-${db.connectionMethod}`;
-          if (!groups[key]) {
-            groups[key] = {
-              regionLabel: db.regionLabel,
-              connectionMethod: db.connectionMethod,
-              databases: []
-            };
+        // First group by connection method
+        const connectionMethodGroups = dbs.reduce((groups, db) => {
+          const methodKey = db.connectionMethod;
+          if (!groups[methodKey]) {
+            groups[methodKey] = [];
           }
-          groups[key].databases.push(db);
+          groups[methodKey].push(db);
           return groups;
-        }, {} as Record<string, RegionGroup>);
+        }, {} as Record<string, Database[]>);
 
-        // Sort region groups by region label
-        acc[provider] = Object.values(regionGroups).sort((a, b) => 
-          a.regionLabel.localeCompare(b.regionLabel)
-        );
+        // Then for each connection method, group by region
+        acc[provider] = Object.entries(connectionMethodGroups).map(([method, methodDbs]) => {
+          // Group by regions within this connection method
+          const regionGroups = methodDbs.reduce((groups, db) => {
+            const key = db.regionLabel;
+            if (!groups[key]) {
+              groups[key] = {
+                regionLabel: db.regionLabel,
+                connectionMethod: method,
+                databases: []
+              };
+            }
+            groups[key].databases.push(db);
+            return groups;
+          }, {} as Record<string, RegionGroup>);
+
+          // Return the connection method with its region groups
+          return {
+            connectionMethod: method,
+            regions: Object.values(regionGroups).sort((a, b) => 
+              a.regionLabel.localeCompare(b.regionLabel)
+            )
+          };
+        }).sort((a, b) => a.connectionMethod.localeCompare(b.connectionMethod)); // Sort connection methods (http first)
       } else {
         // For non-Neon databases, keep original structure
         acc[provider] = dbs;
       }
       return acc;
     },
-    {} as Record<string, RegionGroup[] | Database[]>
+    {} as Record<string, any>
   );
+
+  // When a database is checked that doesn't match the current connection filter,
+  // update the connection filter to 'all'
+  const handleDatabaseToggle = (dbId: number) => {
+    const db = databases.find(d => d.id === dbId);
+    
+    if (!db) return; // Exit if database not found
+    
+    // Check if the database is already selected
+    const isSelected = selectedDatabases.includes(db.id);
+    
+    // If database is not currently selected and doesn't match the connection filter
+    if (!isSelected && db.connectionMethod !== connectionFilter && connectionFilter !== 'all') {
+      // Update connection filter to 'all' before toggling the database
+      if (onUpdateConnectionFilter) {
+        onUpdateConnectionFilter('all');
+        
+        // Give a small delay to allow the connection filter change to take effect
+        // then toggle the database selection
+        setTimeout(() => {
+          onToggleDatabase(dbId);
+        }, 0);
+        
+        // Return early to prevent the immediate toggle below
+        return;
+      }
+    }
+    
+    // Toggle the database for all other cases
+    onToggleDatabase(dbId);
+  };
+
+  // Update checkbox group handling similarly
+  const handleGroupCheckboxChange = (checked: boolean | "indeterminate", group: RegionGroup) => {
+    // If we're selecting databases that don't match the current filter, switch to 'all'
+    if (checked && group.connectionMethod !== connectionFilter && connectionFilter !== 'all') {
+      if (onUpdateConnectionFilter) {
+        onUpdateConnectionFilter('all');
+        
+        // After switching connection filter, toggle all databases in the group
+        setTimeout(() => {
+          group.databases.forEach(db => {
+            if (checked && !selectedDatabases.includes(db.id)) {
+              onToggleDatabase(db.id);
+            } else if (!checked && selectedDatabases.includes(db.id)) {
+              onToggleDatabase(db.id);
+            }
+          });
+        }, 0);
+        
+        // Return early
+        return;
+      }
+    }
+    
+    // Handle normal case
+    group.databases.forEach(db => {
+      if (checked && !selectedDatabases.includes(db.id)) {
+        onToggleDatabase(db.id);
+      } else if (!checked && selectedDatabases.includes(db.id)) {
+        onToggleDatabase(db.id);
+      }
+    });
+  }
 
   return (
     <>
@@ -134,23 +243,25 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
                 size="sm"
                 className="w-full"
                 onClick={() => {
-                  // If all databases are selected, deselect all. Otherwise, select all.
-                  const allDatabases = Object.entries(processedGroups).flatMap(([provider, group]) => {
-                    if (provider === 'Neon Postgres') {
-                      return (group as RegionGroup[]).flatMap(g => g.databases);
-                    }
-                    return group as Database[];
-                  });
+                  // Get all database IDs
+                  const allDatabaseIds = databases.map(db => db.id);
                   
-                  const allSelected = allDatabases.every(db => selectedDatabases.includes(db.id));
+                  // Check if all databases are currently selected
+                  const allSelected = allDatabaseIds.every(id => selectedDatabases.includes(id));
                   
-                  allDatabases.forEach(db => {
-                    if (allSelected && selectedDatabases.includes(db.id)) {
-                      onToggleDatabase(db.id);
-                    } else if (!allSelected && !selectedDatabases.includes(db.id)) {
-                      onToggleDatabase(db.id);
-                    }
-                  });
+                  if (allSelected) {
+                    // Direct approach: clear the selectedDatabases array by toggling every selected database
+                    [...selectedDatabases].forEach(id => {
+                      onToggleDatabase(id);
+                    });
+                  } else {
+                    // Select all databases that aren't already selected
+                    allDatabaseIds.forEach(id => {
+                      if (!selectedDatabases.includes(id)) {
+                        onToggleDatabase(id);
+                      }
+                    });
+                  }
                 }}
               >
                 {selectedDatabases.length === databases.length ? "Deselect All" : "Select All"}
@@ -164,37 +275,40 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
                 </h3>
                 <div className="space-y-1">
                   {provider === 'Neon Postgres' ? (
-                    // Render region groups for Neon Postgres
-                    (items as RegionGroup[]).map((group) => (
-                      <div
-                        key={`${group.regionLabel}-${group.connectionMethod}`}
-                        className={cn(
-                          "flex items-center space-x-2 rounded-md px-2 py-2 hover:bg-accent",
-                          group.databases.some(db => selectedDatabases.includes(db.id)) && "bg-accent/50",
-                        )}
-                      >
-                        <Checkbox
-                          id={`${group.regionLabel}-${group.connectionMethod}`}
-                          checked={group.databases.every(db => selectedDatabases.includes(db.id))}
-                          onCheckedChange={(checked) => {
-                            group.databases.forEach(db => {
-                              if (checked && !selectedDatabases.includes(db.id)) {
-                                onToggleDatabase(db.id);
-                              } else if (!checked && selectedDatabases.includes(db.id)) {
-                                onToggleDatabase(db.id);
-                              }
-                            });
-                          }}
-                        />
-                        <div className={cn("flex-1", !isOpen && "md:hidden")}>
-                          <label
-                            htmlFor={`${group.regionLabel}-${group.connectionMethod}`}
-                            className="flex flex-col cursor-pointer"
+                    // Render organized by connection method for Neon Postgres
+                    (items as Array<{connectionMethod: string, regions: RegionGroup[]}>).map((methodGroup, idx) => (
+                      <div key={methodGroup.connectionMethod} className="mb-3">
+                        <h4 className={cn("px-2 py-1 text-xs font-semibold text-foreground/70 bg-muted rounded-sm mb-1 flex items-center", !isOpen && "md:hidden")}>
+                          @neondatabase/serverless {methodGroup.connectionMethod === 'http' ? 'http' : 'websocket'}
+                        </h4>
+                        {methodGroup.regions.map((group) => (
+                          <div
+                            key={`${group.regionLabel}-${group.connectionMethod}`}
+                            className={cn(
+                              "flex items-center space-x-2 rounded-md px-2 py-2 hover:bg-accent",
+                              group.databases.some(db => selectedDatabases.includes(db.id)) && "bg-accent/50",
+                            )}
                           >
-                            <span className="text-sm font-medium">{group.regionLabel}</span>
-                            <span className="text-xs text-muted-foreground">@neondatabase/serverless {group.connectionMethod === 'http' ? 'http' : 'websocket'}</span>
-                          </label>
-                        </div>
+                            <Checkbox
+                              id={`${group.regionLabel}-${group.connectionMethod}`}
+                              checked={group.databases.every(db => selectedDatabases.includes(db.id))}
+                              onCheckedChange={(checked) => handleGroupCheckboxChange(checked, group)}
+                            />
+                            <div className={cn("flex-1", !isOpen && "md:hidden")}>
+                              <label
+                                htmlFor={`${group.regionLabel}-${group.connectionMethod}`}
+                                className="flex flex-col cursor-pointer"
+                              >
+                                <span className="text-sm font-medium">{group.regionLabel}</span>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                        {idx < (items as Array<{connectionMethod: string, regions: RegionGroup[]}>).length - 1 && (
+                          <div className="my-2 px-2">
+                            <Separator className="opacity-50" />
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -210,7 +324,7 @@ export function DatabaseSidebar({ databases, selectedDatabases, onToggleDatabase
                         <Checkbox
                           id={db.id.toString()}
                           checked={selectedDatabases.includes(db.id)}
-                          onCheckedChange={() => onToggleDatabase(db.id)}
+                          onCheckedChange={() => handleDatabaseToggle(db.id)}
                         />
                         <div className={cn("flex-1", !isOpen && "md:hidden")}>
                           <label htmlFor={db.id.toString()} className="flex flex-col cursor-pointer">

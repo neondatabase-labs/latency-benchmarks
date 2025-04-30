@@ -46,20 +46,33 @@ function BenchmarkDashboardClient({
   const searchParams = useSearchParams()
   const router = useRouter()
   
+  // Track whether we've done the initial load
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
+  
   // Initialize selectedDatabases from URL query param or default to empty array
   const [selectedDatabases, setSelectedDatabases] = useState<number[]>(() => {
     const dbParam = searchParams.get('databases')
     return dbParam === 'all' ? initialDatabases.map(db => db.id) : 
            dbParam ? dbParam.split(',').map(Number) : []
   })
+  
+  // Track connection filter state
+  const [connectionFilter, setConnectionFilter] = useState<string>(
+    searchParams.get('connection') || 'http'
+  )
 
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams.toString())
     
-    if (selectedDatabases.length === 0) {
+    // Only set all databases if it's the initial load and none are selected
+    if (selectedDatabases.length === 0 && !initialLoadComplete) {
       newParams.set('databases', 'all')
       const newSelectedDatabases = initialDatabases.map(db => db.id)
       setSelectedDatabases(newSelectedDatabases)
+      setInitialLoadComplete(true)
+    } else if (selectedDatabases.length === 0) {
+      // After initial load, allow deselect all
+      newParams.set('databases', 'none')
     } else if (selectedDatabases.length === initialDatabases.length) {
       newParams.set('databases', 'all')
     } else {
@@ -67,21 +80,38 @@ function BenchmarkDashboardClient({
     }
     
     if (!newParams.has('queries')) {
-      newParams.set('queries', 'all')
+      newParams.set('queries', 'hot')
     }
     if (!newParams.has('regions')) {
-      newParams.set('regions', 'all')
+      newParams.set('regions', 'match')
     }
     
+    // Update connection filter
+    newParams.set('connection', connectionFilter)
+    
     window.history.replaceState({}, '', `?${newParams.toString()}`)
-  }, [selectedDatabases, searchParams, initialDatabases])
+  }, [selectedDatabases, searchParams, initialDatabases, initialLoadComplete, connectionFilter])
 
 
   const toggleDatabase = (dbId: number) => {
     setSelectedDatabases((prev) => (prev.includes(dbId) ? prev.filter((id) => id !== Number(dbId)) : [...prev, Number(dbId)]))
   }
+  
+  // Function to update connection filter
+  const updateConnectionFilter = (filter: string) => {
+    setConnectionFilter(filter)
+  }
 
-  const filteredDatabases = initialDatabases.filter((db) => selectedDatabases.includes(db.id))
+  const filteredDatabases = initialDatabases.filter((db) => {
+    // Only include databases that are selected
+    if (!selectedDatabases.includes(db.id)) return false;
+    
+    // Apply connection method filter
+    if (connectionFilter === 'all') return true;
+    
+    return connectionFilter === db.connectionMethod;
+  });
+  
   const latencyData = processLatencyData(initialStats, initialFunctions, initialDatabases)
   const historicalData = processHistoricalData(initialStats, initialFunctions, initialDatabases)
 
@@ -97,6 +127,7 @@ function BenchmarkDashboardClient({
         databases={initialDatabases}
         selectedDatabases={selectedDatabases}
         onToggleDatabase={toggleDatabase}
+        onUpdateConnectionFilter={updateConnectionFilter}
       />
 
       <div className="flex-1 p-6" style={{ minWidth: 0 }}>
@@ -119,7 +150,13 @@ function BenchmarkDashboardClient({
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto m-4">
-                <LatencyTable databases={filteredDatabases} functions={initialFunctions} latencyData={latencyData} />
+                <LatencyTable 
+                  databases={filteredDatabases} 
+                  functions={initialFunctions} 
+                  latencyData={latencyData}
+                  connectionFilter={connectionFilter}
+                  onUpdateConnectionFilter={updateConnectionFilter}
+                />
               </div>
             </CardContent>
           </Card>
