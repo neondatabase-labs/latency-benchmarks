@@ -1,7 +1,13 @@
 import "dotenv/config";
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+// Only initialize the database connection at runtime
+const getSql = () => {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set");
+  }
+  return neon(process.env.DATABASE_URL);
+};
 
 interface Database {
   id: number;
@@ -37,6 +43,7 @@ interface Stat {
  * Fetch all databases for a specific function
  */
 export async function getAllDatabases(functionId: number): Promise<Database[]> {
+  const sql = getSql();
   const result = await sql`
     SELECT id, name, provider, region_code, region_label, connection_method, connection_url, neon_project_id
     FROM databases
@@ -49,6 +56,7 @@ export async function getAllDatabases(functionId: number): Promise<Database[]> {
  * Get a function by region code
  */
 export async function getFunctionByRegionCode(regionCode: string): Promise<Function> {
+  const sql = getSql();
   const result = await sql`
     SELECT id, name, region_code, region_label, platform
     FROM functions
@@ -66,6 +74,7 @@ export async function addLatencyMeasurement(
   latencyMs: number,
   queryType: 'cold' | 'hot'
 ): Promise<Stat> {
+  const sql = getSql();
   const result = await sql`
     INSERT INTO stats (date_time, function_id, database_id, latency_ms, query_type)
     VALUES (NOW(), ${functionId}, ${databaseId}, ${latencyMs}, ${queryType})
