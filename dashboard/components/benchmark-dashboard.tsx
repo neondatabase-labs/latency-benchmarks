@@ -134,18 +134,27 @@ function BenchmarkDashboardClient({
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Latency Benchmark Dashboard</h1>
+              <h1 className="text-3xl font-bold">Latency Benchmarks</h1>
             </div>
           </div>
 
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>30-Day Latency Averages</CardTitle>
+                <CardTitle>
+                  {searchParams.get('queries') === 'hot' ? 'Hot Query Latency' :
+                   searchParams.get('queries') === 'cold' ? 'Cold Query Latency' :
+                   '30-Day Latency Averages'}
+                </CardTitle>
               </div>
               <CardDescription>
-                Comparing cold and hot query latency across {selectedDatabases.length} databases and{" "}
-                {initialFunctions.length} serverless functions
+                Comparing
+                {searchParams.get('queries') === 'hot' ? ' hot' :
+                 searchParams.get('queries') === 'cold' ? ' cold' :
+                 ' cold and hot'} query latency across {selectedDatabases.length}
+                {connectionFilter !== 'all' ? 
+                  ` databases using ${connectionFilter === 'http' ? '@neondatabase/serverless HTTP' : '@neondatabase/serverless WebSocket'} connections` : 
+                  ' databases'} and {initialFunctions.length} serverless functions
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">

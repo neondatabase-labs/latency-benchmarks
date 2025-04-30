@@ -14,36 +14,139 @@ export function QASection() {
             <AccordionContent>
               <p>
                 This benchmark measures the latency between serverless functions and databases across different regions.
-                It specifically focuses on the roundtrip time for executing a simple query to retrieve todos from the database.
+                It specifically focuses on the roundtrip time for executing a simple SELECT query.
+                It also compares different connection methods of the Neon serverless driver: WebSocket vs HTTP.
               </p>
               <p className="mt-2">The measurements include:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
                 <li>Network latency between function and database regions</li>
                 <li>Database connection establishment time</li>
                 <li>Query execution and result retrieval time</li>
+                <li>Performance differences between HTTP and WebSocket connections</li>
               </ul>
+              <p className="mt-2">
+                <a 
+                  href="https://neon.tech/blog/http-vs-websockets-for-postgres-queries-at-the-edge" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80"
+                >
+                  Learn more about HTTP vs WebSockets for Postgres queries
+                </a>
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-6">
+            <AccordionTrigger>What is the @neondatabase/serverless driver?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                The benchmark uses the @neondatabase/serverless driver, which is specifically designed for serverless environments.
+                This driver supports two connection methods:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li><strong>HTTP connection:</strong> Faster for single-shot queries, stateless by design</li>
+                <li><strong>WebSocket connection:</strong> More efficient for multiple queries in a single connection, supports more PostgreSQL features</li>
+              </ul>
+              <p className="mt-2">
+                The driver has several key characteristics:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>Uses HTTP or WebSockets instead of TCP for communication</li>
+                <li>Optimized for serverless environments with minimal cold starts</li>
+                <li>Handles connection pooling and management automatically</li>
+                <li>Provides connection caching options to improve performance</li>
+              </ul>
+              <p className="mt-2">
+                <a 
+                  href="https://neon.tech/blog/http-vs-websockets-for-postgres-queries-at-the-edge" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80"
+                >
+                  Learn more about HTTP vs WebSockets for Postgres queries
+                </a>
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-7">
+            <AccordionTrigger>What's the difference between HTTP and WebSocket connections?</AccordionTrigger>
+            <AccordionContent>
+              <p className="font-medium text-primary">
+                Note: This benchmark specifically measures single-shot query performance, which generally favors HTTP connections.
+                The performance characteristics described below have been observed in our other benchmarks testing multiple query scenarios.
+              </p>
+              
+              <p className="mt-3">
+                The @neondatabase/serverless driver offers two connection methods with different performance characteristics and capabilities:
+              </p>
+              
+              <h4 className="font-medium mt-3">HTTP Connections:</h4>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li><strong>Performance:</strong> Faster for single-shot queries (~5-10ms advantage)</li>
+                <li><strong>Initialization:</strong> Requires fewer round-trips to establish a connection</li>
+                <li><strong>Use case:</strong> Ideal for serverless functions that execute a single query per invocation</li>
+                <li><strong>Limitations:</strong> Doesn't support sessions, interactive transactions, NOTIFY, or COPY protocol</li>
+                <li><strong>Optimization:</strong> Connection caching can further improve performance</li>
+              </ul>
+              
+              <h4 className="font-medium mt-3">WebSocket Connections:</h4>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li><strong>Performance:</strong> Slower initial connection (~37ms) but very fast for subsequent queries (~5ms)</li>
+                <li><strong>Initialization:</strong> Requires multiple round-trips (reduced from nine to four through optimization)</li>
+                <li><strong>Use case:</strong> Better for executing multiple queries in a single connection</li>
+                <li><strong>Features:</strong> Supports full Postgres compatibility including sessions, transactions, NOTIFY, and COPY protocol</li>
+                <li><strong>Advantage:</strong> Much lower latency after connection is established</li>
+              </ul>
+              
+              <p className="mt-3">
+                Our benchmark data shows a bi-modal distribution in query latencies:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>HTTP is faster for one-off queries where connections aren't reused</li>
+                <li>WebSockets are faster when you can amortize the connection setup cost across multiple queries</li>
+              </ul>
+              
+              <p className="mt-3">
+                The runtime environment also matters - Edge environments might prioritize cached HTTP connections differently 
+                than Serverless environments.
+              </p>
+              
+              <p className="mt-2">
+                <a 
+                  href="https://neon.tech/blog/http-vs-websockets-for-postgres-queries-at-the-edge" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80"
+                >
+                  Learn more about HTTP vs WebSockets for Postgres queries
+                </a>
+              </p>
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="item-1">
-            <AccordionTrigger>What is a cold query?</AccordionTrigger>
+            <AccordionTrigger>What are cold and hot queries?</AccordionTrigger>
             <AccordionContent>
+              <h4 className="font-medium">Cold Queries</h4>
               <p>
-                A cold query is the first query executed against a database in a benchmark run. In Neon, this may trigger a database startup
-                if the database has been scaled to zero due to inactivity. This auto-scaling behavior can be configured in the Neon dashboard
-                and can also be disabled.
+                A cold query is the first query executed against a database in a benchmark run. In Neon, this triggers a database startup
+                as all benchmark databases have scale-to-zero enabled. This means the database is completely shut down after a period of inactivity
+                and must be restarted for the first query.
+              </p>
+              <p className="mt-2">
+                The benchmark cronjobs are specifically configured to run every 15 minutes to ensure that each database
+                has had time to scale to zero between measurements, allowing us to consistently measure the cold start performance.
               </p>
               <p className="mt-2">The cold query latency includes:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Database startup time (if the database was scaled to zero)</li>
+                <li>Database startup time from a scaled-to-zero state</li>
+                <li>Connection establishment</li>
                 <li>Query execution and result retrieval</li>
               </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="item-2">
-            <AccordionTrigger>What is a hot query?</AccordionTrigger>
-            <AccordionContent>
+              
+              <h4 className="font-medium mt-4">Hot Queries</h4>
               <p>
                 A hot query is executed immediately after a cold query in the same benchmark run. It represents the best-case
                 scenario where the database is already running and ready to handle requests.
@@ -54,6 +157,12 @@ export function QASection() {
                 <li>Query execution time</li>
                 <li>Result retrieval time</li>
               </ul>
+              
+              <p className="mt-3">
+                Measuring both cold and hot queries provides a comprehensive view of database performance across different scenarios.
+                Cold queries show the worst-case latency when the database needs to start up first, while hot queries demonstrate
+                the optimal performance once a database is already running.
+              </p>
             </AccordionContent>
           </AccordionItem>
 
@@ -61,13 +170,17 @@ export function QASection() {
             <AccordionTrigger>How often are benchmark requests made?</AccordionTrigger>
             <AccordionContent>
               <p>
-                Benchmark requests are made every 15 minutes from each serverless function to each database. This is configured
-                in the Vercel cron job settings. For each benchmark run:
+                Benchmark requests are made every 15 minutes from each serverless function to each database. This interval is 
+                specifically chosen to ensure that Neon databases have scaled to zero between measurements, allowing us to 
+                accurately measure cold start performance.
+              </p>
+              <p className="mt-2">
+                For each benchmark run:
               </p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>One cold query is executed first</li>
-                <li>One hot query is executed immediately after</li>
-                <li>Both measurements are stored in the database</li>
+                <li>One cold query is executed first (hitting a scaled-to-zero database)</li>
+                <li>One hot query is executed immediately after (when the database is already running)</li>
+                <li>Both measurements are stored in the stats database (not in the benchmark databases themselves)</li>
               </ul>
               <p className="mt-2">
                 This results in 96 measurements per day (4 measurements per hour × 24 hours) for each function-database pair,
@@ -80,7 +193,7 @@ export function QASection() {
             <AccordionTrigger>What query is being executed for the benchmark?</AccordionTrigger>
             <AccordionContent>
               <p>
-                The benchmark executes a simple SELECT query that retrieves todos from the database:
+                The benchmark executes a simple SELECT query:
               </p>
               <pre className="bg-muted p-2 rounded-md mt-2 overflow-x-auto">
                 {`SELECT 1`}
@@ -88,53 +201,6 @@ export function QASection() {
               <p className="mt-2">
                 This query is intentionally simple to focus on measuring connection and network latency rather than
                 database processing capabilities.
-              </p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="item-5">
-            <AccordionTrigger>How is the data stored and processed?</AccordionTrigger>
-            <AccordionContent>
-              <p>
-                The benchmark system uses two types of databases:
-              </p>
-              <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Benchmark databases: Used to measure latency in different regions</li>
-                <li>Metadata database: Stores the measurement results and configuration</li>
-              </ul>
-              <p className="mt-2">
-                Each measurement includes:
-              </p>
-              <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Timestamp of the measurement</li>
-                <li>Function and database identifiers</li>
-                <li>Latency in milliseconds</li>
-                <li>Query type (cold or hot)</li>
-              </ul>
-              <p className="mt-2">
-                The table shows the average latency over the last 30 days, while the graphs show individual data points
-                to help visualize trends and patterns over time.
-              </p>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="item-6">
-            <AccordionTrigger>What is the @neondatabase/serverless driver?</AccordionTrigger>
-            <AccordionContent>
-              <p>
-                The benchmark uses the @neondatabase/serverless driver, which is specifically designed for serverless environments.
-                This driver has several key characteristics:
-              </p>
-              <ul className="list-disc pl-6 mt-1 space-y-1">
-                <li>Uses HTTP instead of TCP for communication</li>
-                <li>Stateless by design, making it ideal for serverless functions</li>
-                <li>Does not require persistent database connections</li>
-                <li>Automatically handles connection pooling and management</li>
-              </ul>
-              <p className="mt-2">
-                While this approach prevents the use of database transactions (which require stateful TCP connections),
-                it's perfect for simple queries in serverless environments as it eliminates the need to manage database
-                connections manually.
               </p>
             </AccordionContent>
           </AccordionItem>
