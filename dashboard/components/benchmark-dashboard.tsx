@@ -2,12 +2,9 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Info } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DatabaseSidebar } from "@/components/database-sidebar"
 import { LatencyTable } from "@/components/latency-table"
-import { LatencyGraphs } from "@/components/latency-graphs"
 import { QASection } from "@/components/qa-section"
 import { Database, Function, Stat } from "@/lib/schema"
 
@@ -79,17 +76,25 @@ function BenchmarkDashboardClient({
       newParams.set('databases', selectedDatabases.join(','))
     }
     
-    if (!newParams.has('queries')) {
+    // Only set default values if parameters don't already exist
+    // This preserves URL parameters on initial load
+    if (!searchParams.has('queries')) {
       newParams.set('queries', 'hot')
     }
-    if (!newParams.has('regions')) {
+    
+    if (!searchParams.has('regions')) {
       newParams.set('regions', 'match')
     }
     
-    // Update connection filter
-    newParams.set('connection', connectionFilter)
+    // Update connection filter, but only if it's changed from the URL
+    if (!searchParams.has('connection') || connectionFilter !== searchParams.get('connection')) {
+      newParams.set('connection', connectionFilter)
+    }
     
-    window.history.replaceState({}, '', `?${newParams.toString()}`)
+    // Only update URL if we've changed something
+    if (newParams.toString() !== searchParams.toString()) {
+      window.history.replaceState({}, '', `?${newParams.toString()}`)
+    }
   }, [selectedDatabases, searchParams, initialDatabases, initialLoadComplete, connectionFilter])
 
 
@@ -99,7 +104,44 @@ function BenchmarkDashboardClient({
   
   // Function to update connection filter
   const updateConnectionFilter = (filter: string) => {
-    setConnectionFilter(filter)
+    // Check if this is an auto-select request
+    if (filter.includes(':autoselect')) {
+      const actualFilter = filter.split(':')[0]; // Extract the actual filter (http, ws, all)
+      
+      // Update the connection filter first
+      setConnectionFilter(actualFilter);
+      
+      // Find all databases that match the new filter
+      const matchingDatabases = initialDatabases
+        .filter(db => actualFilter === 'all' || db.connectionMethod === actualFilter)
+        .map(db => db.id);
+      
+      // Get databases that would remain selected after the filter is applied
+      const remainingSelectedDatabases = selectedDatabases.filter(dbId => {
+        const db = initialDatabases.find(db => db.id === dbId);
+        return db && (actualFilter === 'all' || db.connectionMethod === actualFilter);
+      });
+      
+      // Check if we need to select databases
+      if (matchingDatabases.length > 0) {
+        // Case 1: No databases are currently selected - select all matching ones
+        if (selectedDatabases.length === 0) {
+          setSelectedDatabases(matchingDatabases);
+        }
+        // Case 2: Some databases are selected but none match the new filter
+        else if (remainingSelectedDatabases.length === 0) {
+          setSelectedDatabases(matchingDatabases);
+        }
+        // Case 3: We're switching to a specific type (ws/http) and have some databases that don't match
+        else if (actualFilter !== 'all') {
+          setSelectedDatabases(remainingSelectedDatabases);
+        }
+        // For 'all' filter and there are some matching databases, we don't need to change anything
+      }
+    } else {
+      // Normal filter change (not auto-select)
+      setConnectionFilter(filter);
+    }
   }
 
   const filteredDatabases = initialDatabases.filter((db) => {

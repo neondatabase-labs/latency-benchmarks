@@ -45,7 +45,8 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
     const param = searchParams.get('queries')
     if (param === 'cold') return 'cold'
     if (param === 'hot') return 'hot'
-    return 'hot' // Default is 'hot' now instead of 'both'
+    if (param === 'all') return 'both'
+    return 'hot' // Default is 'hot' if no param is specified
   })
   
   const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => {
@@ -64,8 +65,29 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
   // Function to update connection filter
   const handleConnectionFilterChange = (value: string) => {
     setLocalConnectionFilter(value)
+
     if (onUpdateConnectionFilter) {
-      onUpdateConnectionFilter(value)
+      // First update with just the filter to ensure the connection filter changes
+      onUpdateConnectionFilter(value);
+      
+      // Then check if we need to auto-select databases
+      setTimeout(() => {
+        if (databases.length === 0) {
+          // If there are no selected databases, send auto-select signal
+          onUpdateConnectionFilter(value + ':autoselect');
+        } else {
+          // If there are selected databases but with a different connection method
+          // Check if any of them match the new filter
+          const hasMatchingDatabase = databases.some(db => 
+            value === 'all' || db.connectionMethod === value
+          );
+          
+          // If none match, trigger auto-select
+          if (!hasMatchingDatabase) {
+            onUpdateConnectionFilter(value + ':autoselect');
+          }
+        }
+      }, 0);
     }
   }
   
@@ -77,15 +99,27 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
       const queryParamValue = queryType === 'both' ? 'all' : queryType
       const regionParamValue = regionFilter === 'matching' ? 'match' : 'all'
       
-      newParams.set('queries', queryParamValue)
-      newParams.set('regions', regionParamValue)
-      newParams.set('connection', connectionFilter)
+      // Only update if the values have changed
+      if (searchParams.get('queries') !== queryParamValue) {
+        newParams.set('queries', queryParamValue)
+      }
+      
+      if (searchParams.get('regions') !== regionParamValue) {
+        newParams.set('regions', regionParamValue)
+      }
+      
+      if (searchParams.get('connection') !== connectionFilter) {
+        newParams.set('connection', connectionFilter)
+      }
       
       if (!newParams.has('databases')) {
         newParams.set('databases', 'all')
       }
       
-      window.history.replaceState({}, '', `?${newParams.toString()}`)
+      // Only update URL if we've changed something
+      if (newParams.toString() !== searchParams.toString()) {
+        window.history.replaceState({}, '', `?${newParams.toString()}`)
+      }
     } else {
       // If connection filter is managed externally, only sync query type and region filter
       const newParams = new URLSearchParams(searchParams.toString())
@@ -93,14 +127,23 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
       const queryParamValue = queryType === 'both' ? 'all' : queryType
       const regionParamValue = regionFilter === 'matching' ? 'match' : 'all'
       
-      newParams.set('queries', queryParamValue)
-      newParams.set('regions', regionParamValue)
+      // Only update if the values have changed
+      if (searchParams.get('queries') !== queryParamValue) {
+        newParams.set('queries', queryParamValue)
+      }
+      
+      if (searchParams.get('regions') !== regionParamValue) {
+        newParams.set('regions', regionParamValue)
+      }
       
       if (!newParams.has('databases')) {
         newParams.set('databases', 'all')
       }
       
-      window.history.replaceState({}, '', `?${newParams.toString()}`)
+      // Only update URL if we've changed something
+      if (newParams.toString() !== searchParams.toString()) {
+        window.history.replaceState({}, '', `?${newParams.toString()}`)
+      }
     }
   }, [queryType, regionFilter, connectionFilter, searchParams, onUpdateConnectionFilter])
 
@@ -319,7 +362,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
       </div>
       <div className="max-h-[80vh]">
       <div className="rounded-md border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader className="sticky top-0 bg-background z-20">
               <TableRow>
                 <TableHead 
@@ -339,36 +382,46 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                 </TableHead>
               </TableRow>
               <TableRow>
-                {filteredRegionGroups.map((group, groupIndex) => (
-                  <TableHead 
-                    key={`${group.regionLabel}-${group.connectionMethod}`} 
-                    colSpan={queryType === "both" ? 2 : 1}
-                    className={cn(
-                      "text-center border-b bg-background",
-                      groupIndex !== 0 && "border-l-2 border-l-muted"
-                    )}
-                    style={{ 
-                      width: queryType === "both" ? '400px' : '200px',
-                      minWidth: queryType === "both" ? '400px' : '200px'
-                    }}
-                  >
-                    <div className="font-medium break-words text-sm">
-                      {group.regionLabel}
-                      <div className="font-normal text-xs text-muted-foreground mt-1 break-all">
-                        {group.regionCode} via<br />@neondatabase/serverless{" "}{group.connectionMethod === 'http' ? <strong>http</strong> : <strong>websocket</strong>}
+                {filteredRegionGroups.map((group, groupIndex) => {
+                  // Calculate equal width for all columns
+                  const colWidth = `${100 / filteredRegionGroups.length}%`;
+                  return (
+                    <TableHead 
+                      key={`${group.regionLabel}-${group.connectionMethod}`} 
+                      colSpan={queryType === "both" ? 2 : 1}
+                      className={cn(
+                        "text-center border-b bg-background",
+                        groupIndex !== 0 && "border-l-2 border-l-muted"
+                      )}
+                      style={{ 
+                        width: colWidth,
+                        minWidth: queryType === "both" ? '400px' : '200px'
+                      }}
+                    >
+                      <div className="font-medium break-words text-sm">
+                        {group.regionLabel}
+                        <div className="font-normal text-xs text-muted-foreground mt-1 break-all">
+                          {group.regionCode} via<br />@neondatabase/serverless{" "}{group.connectionMethod === 'http' ? <strong>http</strong> : <strong>websocket</strong>}
+                        </div>
                       </div>
-                    </div>
-                  </TableHead>
-                ))}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
               <TableRow>
                 {filteredRegionGroups.flatMap((group) => {
                   const cells = [];
+                  // Calculate equal width for cells when we have both hot and cold
+                  const cellStyle = queryType === "both" 
+                    ? { width: `${50 / filteredRegionGroups.length}%`, minWidth: '200px' }
+                    : { width: `${100 / filteredRegionGroups.length}%`, minWidth: '200px' };
+                  
                   if (queryType === "both" || queryType === "cold") {
                     cells.push(
                       <TableHead 
                         key={`${group.regionLabel}-${group.connectionMethod}-cold`} 
-                        className="text-center font-medium text-sm bg-background px-2 w-full min-w-[200px]"
+                        className="text-center font-medium text-sm bg-background px-2"
+                        style={cellStyle}
                       >
                         Cold
                       </TableHead>
@@ -378,7 +431,8 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                     cells.push(
                       <TableHead 
                         key={`${group.regionLabel}-${group.connectionMethod}-hot`} 
-                        className="text-center font-medium text-sm bg-background px-2 w-full min-w-[200px]"
+                        className="text-center font-medium text-sm bg-background px-2"
+                        style={cellStyle}
                       >
                         Hot
                       </TableHead>
@@ -414,17 +468,24 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                     </div>
                   </TableCell>
                   {filteredRegionGroups.flatMap((group, groupIndex) => {
-                    const isSameRegionMatch = isExactSameRegion(group, fn)
+                    const isSameRegionMatch = isExactSameRegion(group, fn);
                     const cells = [];
+                    
+                    // Calculate equal width for cells when we have both hot and cold
+                    const cellStyle = queryType === "both" 
+                      ? { width: `${50 / filteredRegionGroups.length}%`, minWidth: '200px' }
+                      : { width: `${100 / filteredRegionGroups.length}%`, minWidth: '200px' };
+                    
                     if (queryType === "both" || queryType === "cold") {
                       cells.push(
                         <TableCell
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-cold`}
                           className={cn(
-                            "text-center w-full min-w-[200px]", 
+                            "text-center", 
                             isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
                             groupIndex !== 0 && "border-l-2 border-l-muted"
                           )}
+                          style={cellStyle}
                         >
                           {formatLatency(getRegionGroupLatency(fn.id, group, "cold"), "cold")}
                         </TableCell>
@@ -435,11 +496,12 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                         <TableCell
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-hot`}
                           className={cn(
-                            "text-center w-full min-w-[200px]", 
+                            "text-center", 
                             isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
                             queryType === "both" && "border-l",
                             groupIndex !== 0 && queryType !== "both" && "border-l-2 border-l-muted"
                           )}
+                          style={cellStyle}
                         >
                           {formatLatency(getRegionGroupLatency(fn.id, group, "hot"), "hot")}
                         </TableCell>
