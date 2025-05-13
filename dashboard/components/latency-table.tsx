@@ -252,15 +252,15 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
   const formatLatency = (latency: number | null, queryType: "cold" | "hot") => {
     if (latency === null) return <span className="text-muted-foreground">N/A</span>
 
-    let colorClass = "text-green-600"
+    let colorClass = "text-status-green"
     if (queryType === "cold") {
-      if (latency > 200) colorClass = "text-yellow-600"
-      if (latency > 500) colorClass = "text-orange-600"
-      if (latency > 1000) colorClass = "text-red-600"
+      if (latency > 200) colorClass = "text-status-yellow"
+      if (latency > 500) colorClass = "text-status-orange"
+      if (latency > 1000) colorClass = "text-status-red"
     } else {
-      if (latency > 100) colorClass = "text-yellow-600"
-      if (latency > 250) colorClass = "text-orange-600"
-      if (latency > 500) colorClass = "text-red-600"
+      if (latency > 100) colorClass = "text-status-yellow"
+      if (latency > 250) colorClass = "text-status-orange"
+      if (latency > 500) colorClass = "text-status-red"
     }
 
     return <span className={colorClass}>{latency.toFixed(2)}ms</span>
@@ -289,7 +289,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
     <div className="space-y-3 min-w-full w-fit">
       <div className="flex flex-col gap-3">
         <div className="flex items-center space-x-1">
-          <div className="h-3 w-3 rounded-sm bg-green-100"></div>
+          <div className="h-3 w-3 rounded-sm bg-matched-region"></div>
           <span className="text-xs text-muted-foreground">Same region (recommended)</span>
         </div>
         
@@ -362,29 +362,27 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
       </div>
       <div className="max-h-[80vh]">
       <div className="rounded-md border">
-          <Table className="table-fixed">
+          <Table className="table-auto">
             <TableHeader className="sticky top-0 bg-background z-20">
               <TableRow>
                 <TableHead 
                   rowSpan={3} 
-                  className="sticky left-0 bg-background z-30 border-r w-[120px] min-w-[120px]"
+                  className="sticky left-0 bg-background z-30 border-r md:min-w-[120px]"
                 >
                   <div className="h-full flex flex-col justify-between">
-                    <div className="p-1 text-xs text-muted-foreground text-right">Database Region →</div>
-                    <div className="p-1 text-xs text-muted-foreground">Function Region ↓ </div>
+                    <div className="p-1 text-xs md:text-xs text-muted-foreground text-right">Database Region →</div>
+                    <div className="p-1 text-xs md:text-xs text-muted-foreground">Function Region ↓ </div>
                   </div>
                 </TableHead>
                 <TableHead
                   colSpan={filteredRegionGroups.length * (queryType === "both" ? 2 : 1)}
                   className="text-center border-b bg-muted py-2"
                 >
-                  <span className="font-bold text-lg">Neon Serverless Postgres</span>
+                  <span className="font-bold text-base md:text-lg">Neon Serverless Postgres</span>
                 </TableHead>
               </TableRow>
               <TableRow>
                 {filteredRegionGroups.map((group, groupIndex) => {
-                  // Calculate equal width for all columns
-                  const colWidth = `${100 / filteredRegionGroups.length}%`;
                   return (
                     <TableHead 
                       key={`${group.regionLabel}-${group.connectionMethod}`} 
@@ -393,15 +391,11 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                         "text-center border-b bg-background",
                         groupIndex !== 0 && "border-l-2 border-l-muted"
                       )}
-                      style={{ 
-                        width: colWidth,
-                        minWidth: queryType === "both" ? '400px' : '200px'
-                      }}
                     >
-                      <div className="font-medium break-words text-sm">
+                      <div className="font-medium break-words text-xs md:text-sm">
                         {group.regionLabel}
-                        <div className="font-normal text-xs text-muted-foreground mt-1 break-all">
-                          {group.regionCode} via<br />@neondatabase/serverless{" "}{group.connectionMethod === 'http' ? <strong>http</strong> : <strong>websocket</strong>}
+                        <div className="font-normal text-[10px] md:text-xs text-muted-foreground mt-1 break-all">
+                          {group.regionCode} via<br />@neondatabase/serverless<br />{group.connectionMethod === 'http' ? <strong>http</strong> : <strong className="text-callout-foreground bg-callout px-1 rounded">websocket</strong>}
                         </div>
                       </div>
                     </TableHead>
@@ -411,17 +405,12 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
               <TableRow>
                 {filteredRegionGroups.flatMap((group) => {
                   const cells = [];
-                  // Calculate equal width for cells when we have both hot and cold
-                  const cellStyle = queryType === "both" 
-                    ? { width: `${50 / filteredRegionGroups.length}%`, minWidth: '200px' }
-                    : { width: `${100 / filteredRegionGroups.length}%`, minWidth: '200px' };
                   
                   if (queryType === "both" || queryType === "cold") {
                     cells.push(
                       <TableHead 
                         key={`${group.regionLabel}-${group.connectionMethod}-cold`} 
-                        className="text-center font-medium text-sm bg-background px-2"
-                        style={cellStyle}
+                        className="text-center font-medium text-xs md:text-sm bg-background px-2"
                       >
                         Cold
                       </TableHead>
@@ -431,8 +420,7 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                     cells.push(
                       <TableHead 
                         key={`${group.regionLabel}-${group.connectionMethod}-hot`} 
-                        className="text-center font-medium text-sm bg-background px-2"
-                        style={cellStyle}
+                        className="text-center font-medium text-xs md:text-sm bg-background px-2"
                       >
                         Hot
                       </TableHead>
@@ -449,9 +437,9 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                   colSpan={1 + (filteredRegionGroups.length * (queryType === "both" ? 2 : 1))} 
                   className="left-0 bg-muted z-30"
                 >
-                  <span className="font-bold text-lg">Vercel Serverless</span>
+                  <span className="font-bold text-base md:text-lg">Vercel Serverless</span>
                   {regionFilter === "matching" && (
-                    <span className="ml-2 text-sm text-muted-foreground">
+                    <span className="ml-2 text-xs md:text-sm text-muted-foreground">
                       (Showing only regions matching selected databases)
                     </span>
                   )}
@@ -462,8 +450,8 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                   <TableCell 
                     className="sticky left-0 bg-background z-30 border-r"
                   >
-                    <div className="font-normal text-xs">{fn.regionLabel.split(' - ')[0]}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="font-normal text-[10px] md:text-xs">{fn.regionLabel.split(' - ')[0]}</div>
+                    <div className="text-[10px] md:text-xs text-muted-foreground">
                       {fn.regionLabel.split(' - ').slice(1).join(' - ')}
                     </div>
                   </TableCell>
@@ -471,21 +459,15 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                     const isSameRegionMatch = isExactSameRegion(group, fn);
                     const cells = [];
                     
-                    // Calculate equal width for cells when we have both hot and cold
-                    const cellStyle = queryType === "both" 
-                      ? { width: `${50 / filteredRegionGroups.length}%`, minWidth: '200px' }
-                      : { width: `${100 / filteredRegionGroups.length}%`, minWidth: '200px' };
-                    
                     if (queryType === "both" || queryType === "cold") {
                       cells.push(
                         <TableCell
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-cold`}
                           className={cn(
-                            "text-center", 
-                            isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
+                            "text-center text-xs md:text-base", 
+                            isSameRegionMatch ? "bg-matched-region text-matched-region-foreground" : group.connectionMethod === "ws" && "bg-callout text-callout-foreground",
                             groupIndex !== 0 && "border-l-2 border-l-muted"
                           )}
-                          style={cellStyle}
                         >
                           {formatLatency(getRegionGroupLatency(fn.id, group, "cold"), "cold")}
                         </TableCell>
@@ -496,12 +478,11 @@ function LatencyTableClient({ databases, functions, latencyData, connectionFilte
                         <TableCell
                           key={`${fn.id}-${group.regionLabel}-${group.connectionMethod}-hot`}
                           className={cn(
-                            "text-center", 
-                            isSameRegionMatch ? "bg-green-50" : group.connectionMethod === "ws" && "bg-yellow-50",
+                            "text-center text-xs md:text-base", 
+                            isSameRegionMatch ? "bg-matched-region text-matched-region-foreground" : group.connectionMethod === "ws" && "bg-callout text-callout-foreground",
                             queryType === "both" && "border-l",
                             groupIndex !== 0 && queryType !== "both" && "border-l-2 border-l-muted"
                           )}
-                          style={cellStyle}
                         >
                           {formatLatency(getRegionGroupLatency(fn.id, group, "hot"), "hot")}
                         </TableCell>

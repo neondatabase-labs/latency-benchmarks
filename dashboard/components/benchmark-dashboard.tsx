@@ -2,11 +2,16 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DatabaseSidebar } from "@/components/database-sidebar"
 import { LatencyTable } from "@/components/latency-table"
 import { QASection } from "@/components/qa-section"
 import { Database, Function, Stat } from "@/lib/schema"
+
+// Import Neon logos
+import logoLight from "../assets/logo.svg"
+import logoDark from "../assets/logo-dark.svg"
 
 interface LatencyData {
   cold: Record<string, Record<string, number>>
@@ -176,7 +181,27 @@ function BenchmarkDashboardClient({
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Latency Benchmarks</h1>
+                <h1 className="text-3xl font-bold">Latency Benchmarks</h1>
+                <div className="flex flex-col md:flex-row md:items-center ml-2">
+                <div>
+                  <Image
+                    className="h-6 w-auto dark:hidden"
+                    src={logoLight}
+                    alt="Neon logo"
+                    width={88}
+                    height={24}
+                    priority
+                  />
+                  <Image
+                    className="hidden h-6 w-auto dark:block"
+                    src={logoDark}
+                    alt="Neon logo"
+                    width={88}
+                    height={24}
+                    priority
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
