@@ -12,6 +12,7 @@ import { Database, Function, Stat } from "@/lib/schema"
 // Import Neon logos
 import logoLight from "../assets/logo.svg"
 import logoDark from "../assets/logo-dark.svg"
+import { AvgStat } from "@/lib/db"
 
 interface LatencyData {
   cold: Record<string, Record<string, number>>
@@ -29,7 +30,7 @@ interface HistoricalData {
 interface BenchmarkDashboardProps {
   initialDatabases: Database[]
   initialFunctions: Function[]
-  initialStats: Stat[]
+  initialStats: AvgStat[]
 }
 
 export function BenchmarkDashboard(props: BenchmarkDashboardProps) {
@@ -160,13 +161,6 @@ function BenchmarkDashboardClient({
   });
   
   const latencyData = processLatencyData(initialStats, initialFunctions, initialDatabases)
-  const historicalData = processHistoricalData(initialStats, initialFunctions, initialDatabases)
-
-  const today = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -244,7 +238,7 @@ function BenchmarkDashboardClient({
 }
 
 // Helper functions to process the database stats into the required formats
-function processLatencyData(stats: Stat[], functions: Function[], databases: Database[]): LatencyData {
+function processLatencyData(stats: AvgStat[], functions: Function[], databases: Database[]): LatencyData {
   const result: LatencyData = {
     cold: {},
     hot: {}
@@ -272,16 +266,16 @@ function processLatencyData(stats: Stat[], functions: Function[], databases: Dat
       acc[key].hot.push(stat)
     }
     return acc
-  }, {} as Record<string, { cold: Stat[]; hot: Stat[] }>)
+  }, {} as Record<string, { cold: AvgStat[]; hot: AvgStat[] }>)
 
   // Calculate averages
   Object.entries(groupedStats).forEach(([key, { cold, hot }]) => {
     const [functionId, databaseId] = key.split('-').map(Number)
     if (cold.length > 0) {
-      result.cold[functionId][databaseId] = cold.reduce((sum, s) => sum + Number(s.latencyMs), 0) / cold.length
+      result.cold[functionId][databaseId] = cold.reduce((sum, s) => sum + Number(s.avgLatencyMs), 0) / cold.length
     }
     if (hot.length > 0) {
-      result.hot[functionId][databaseId] = hot.reduce((sum, s) => sum + Number(s.latencyMs), 0) / hot.length
+      result.hot[functionId][databaseId] = hot.reduce((sum, s) => sum + Number(s.avgLatencyMs), 0) / hot.length
     }
   })
 
