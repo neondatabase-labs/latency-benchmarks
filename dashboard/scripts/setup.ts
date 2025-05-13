@@ -1,16 +1,27 @@
 import { db } from "../lib/db";
-import { databases, functions, type NewDatabase, type NewFunction } from "../lib/schema";
+import {
+  databases,
+  functions,
+  type NewDatabase,
+  type NewFunction,
+} from "../lib/schema";
 import { getVercelRegionCode } from "../lib/vercel";
 import { $ } from "bun";
 
-async function createNeonProject(platform: string, platformRegion: string, dbRegion: string, connectionMethod: 'ws' | 'http'): Promise<{ connectionUrl: string; projectId: string }> {
+async function createNeonProject(
+  platform: string,
+  platformRegion: string,
+  dbRegion: string,
+  connectionMethod: "ws" | "http",
+): Promise<{ connectionUrl: string; projectId: string }> {
   const projectName = `benchmarking-from-${platform}-${platformRegion}-to-${dbRegion}-via-${
-    connectionMethod === 'ws' ? 'ws' : 'http'
+    connectionMethod === "ws" ? "ws" : "http"
   }`;
   console.log(`Creating Neon project: ${projectName}`);
-  
+
   try {
-    const projectData = await $`npx neonctl project create --name ${projectName} --region-id aws-${dbRegion} --org-id ${process.env.NEON_ORG_ID} --output json`.json();
+    const projectData =
+      await $`npx neonctl project create --name ${projectName} --region-id aws-${dbRegion} --org-id ${process.env.NEON_ORG_ID} --output json`.json();
     return {
       connectionUrl: projectData.connection_uris[0].connection_uri,
       projectId: projectData.project.id,
@@ -82,7 +93,8 @@ async function main() {
       {
         name: "Vercel Serverless",
         regionCode: "ap-southeast-2",
-        regionLabel: "Sydney, Australia (Southeast Asia) - ap-southeast-2 - syd1",
+        regionLabel:
+          "Sydney, Australia (Southeast Asia) - ap-southeast-2 - syd1",
         platform: "vercel",
       },
       {
@@ -94,7 +106,8 @@ async function main() {
       {
         name: "Vercel Serverless",
         regionCode: "ap-northeast-2",
-        regionLabel: "Seoul, South Korea (Northeast Asia) - ap-northeast-2 - icn1",
+        regionLabel:
+          "Seoul, South Korea (Northeast Asia) - ap-northeast-2 - icn1",
         platform: "vercel",
       },
       {
@@ -112,7 +125,8 @@ async function main() {
       {
         name: "Vercel Serverless",
         regionCode: "af-south-1",
-        regionLabel: "Cape Town, South Africa (South Africa) - af-south-1 - cpt1",
+        regionLabel:
+          "Cape Town, South Africa (South Africa) - af-south-1 - cpt1",
         platform: "vercel",
       },
       {
@@ -138,7 +152,7 @@ async function main() {
         regionCode: "ap-northeast-3",
         regionLabel: "Osaka, Japan (Northeast Asia) - ap-northeast-3 - kix1",
         platform: "vercel",
-      }
+      },
     ];
 
     console.log("Creating functions...");
@@ -146,7 +160,7 @@ async function main() {
       vercelFunctions.map(async (func) => {
         const result = await db.insert(functions).values(func).returning();
         return result[0];
-      })
+      }),
     );
     console.log("Created functions:", createdFunctions);
 
@@ -173,12 +187,13 @@ async function main() {
       // Create HTTP databases for all regions
       for (const region of awsRegions) {
         // Create HTTP connection project
-        const { connectionUrl: httpConnectionUrl, projectId: httpProjectId } = await createNeonProject(
-          fn.platform,
-          vercelRegionCode,
-          region.code,
-          'http'
-        );
+        const { connectionUrl: httpConnectionUrl, projectId: httpProjectId } =
+          await createNeonProject(
+            fn.platform,
+            vercelRegionCode,
+            region.code,
+            "http",
+          );
 
         neonDatabases.push({
           name: "Neon Postgres",
@@ -186,7 +201,7 @@ async function main() {
           regionCode: region.code,
           regionLabel: region.label,
           functionId: fn.id,
-          connectionMethod: 'http',
+          connectionMethod: "http",
           connectionUrl: httpConnectionUrl,
           neonProjectId: httpProjectId,
         });
@@ -194,12 +209,13 @@ async function main() {
         // Add special configurations only for specified regions
         if (specialRegions.includes(region.code)) {
           // Add WebSocket connection (which handles pooling)
-          const { connectionUrl: wsConnectionUrl, projectId: wsProjectId } = await createNeonProject(
-            fn.platform,
-            vercelRegionCode,
-            region.code,
-            'ws'
-          );
+          const { connectionUrl: wsConnectionUrl, projectId: wsProjectId } =
+            await createNeonProject(
+              fn.platform,
+              vercelRegionCode,
+              region.code,
+              "ws",
+            );
 
           neonDatabases.push({
             name: "Neon Postgres",
@@ -207,7 +223,7 @@ async function main() {
             regionCode: region.code,
             regionLabel: region.label,
             functionId: fn.id,
-            connectionMethod: 'ws',
+            connectionMethod: "ws",
             connectionUrl: wsConnectionUrl,
             neonProjectId: wsProjectId,
           });
@@ -216,9 +232,12 @@ async function main() {
 
       const createdDatabases = await Promise.all(
         neonDatabases.map(async (database) => {
-          const result = await db.insert(databases).values(database).returning();
+          const result = await db
+            .insert(databases)
+            .values(database)
+            .returning();
           return result[0];
-        })
+        }),
       );
       console.log(`Created databases for function ${fn.id}:`, createdDatabases);
     }
@@ -236,4 +255,4 @@ main()
   .catch((error) => {
     console.error("Unhandled error:", error);
     process.exit(1);
-  }); 
+  });

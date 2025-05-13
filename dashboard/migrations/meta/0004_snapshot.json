@@ -70,12 +70,8 @@
           "name": "databases_function_id_functions_id_fk",
           "tableFrom": "databases",
           "tableTo": "functions",
-          "columnsFrom": [
-            "function_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["function_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -85,11 +81,7 @@
         "databases_function_id_connection_method_region_code_unique": {
           "name": "databases_function_id_connection_method_region_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "function_id",
-            "connection_method",
-            "region_code"
-          ]
+          "columns": ["function_id", "connection_method", "region_code"]
         }
       },
       "policies": {},
@@ -188,12 +180,8 @@
           "name": "stats_function_id_functions_id_fk",
           "tableFrom": "stats",
           "tableTo": "functions",
-          "columnsFrom": [
-            "function_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["function_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -201,12 +189,8 @@
           "name": "stats_database_id_databases_id_fk",
           "tableFrom": "stats",
           "tableTo": "databases",
-          "columnsFrom": [
-            "database_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["database_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -222,25 +206,17 @@
     "public.connection_method": {
       "name": "connection_method",
       "schema": "public",
-      "values": [
-        "http",
-        "ws"
-      ]
+      "values": ["http", "ws"]
     },
     "public.platform": {
       "name": "platform",
       "schema": "public",
-      "values": [
-        "vercel"
-      ]
+      "values": ["vercel"]
     },
     "public.query_type": {
       "name": "query_type",
       "schema": "public",
-      "values": [
-        "cold",
-        "hot"
-      ]
+      "values": ["cold", "hot"]
     }
   },
   "schemas": {},

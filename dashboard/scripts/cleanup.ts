@@ -28,8 +28,10 @@ async function main() {
     // Delete each database and its associated stats
     console.log("\n=== CLEANING UP DATABASES AND STATS ===");
     for (const dbRecord of allDatabases) {
-      console.log(`\nProcessing database: ${dbRecord.name} (${dbRecord.regionCode})`);
-      
+      console.log(
+        `\nProcessing database: ${dbRecord.name} (${dbRecord.regionCode})`,
+      );
+
       // Delete associated stats
       console.log("Deleting associated stats...");
       await db.delete(stats).where(eq(stats.databaseId, dbRecord.id));
@@ -48,7 +50,7 @@ async function main() {
     console.log("\n=== CLEANING UP FUNCTIONS AND STATS ===");
     for (const fn of allFunctions) {
       console.log(`\nProcessing function: ${fn.name} (${fn.regionCode})`);
-      
+
       // Delete associated stats
       console.log("Deleting associated stats...");
       await db.delete(stats).where(eq(stats.functionId, fn.id));
@@ -73,4 +75,4 @@ main()
   .catch((error) => {
     console.error("Unhandled error:", error);
     process.exit(1);
-  }); 
+  });

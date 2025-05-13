@@ -131,12 +131,8 @@
           "name": "stats_function_id_functions_id_fk",
           "tableFrom": "stats",
           "tableTo": "functions",
-          "columnsFrom": [
-            "function_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["function_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -144,12 +140,8 @@
           "name": "stats_database_id_databases_id_fk",
           "tableFrom": "stats",
           "tableTo": "databases",
-          "columnsFrom": [
-            "database_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["database_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

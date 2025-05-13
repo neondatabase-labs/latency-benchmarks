@@ -2,7 +2,14 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import { avg, desc, gte } from "drizzle-orm";
-import { databases, functions, stats, type Database, type Function, type Stat } from "./schema";
+import {
+  databases,
+  functions,
+  stats,
+  type Database,
+  type Function,
+  type Stat,
+} from "./schema";
 
 config({ path: ".env" });
 
@@ -20,7 +27,7 @@ export async function getAllFunctions(): Promise<Function[]> {
 export type AvgStat = {
   functionId: number;
   databaseId: number;
-  queryType: 'cold' | 'hot';
+  queryType: "cold" | "hot";
   avgLatencyMs: string | null; // `decimal` columns come back as strings
 };
 
@@ -33,7 +40,7 @@ export async function getLast30DaysAvgLatency(): Promise<AvgStat[]> {
       functionId: stats.functionId,
       databaseId: stats.databaseId,
       queryType: stats.queryType,
-      avgLatencyMs: avg(stats.latencyMs).as('avg_latency_ms'),
+      avgLatencyMs: avg(stats.latencyMs).as("avg_latency_ms"),
     })
     .from(stats)
     .where(gte(stats.dateTime, thirtyDaysAgo))

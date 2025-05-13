@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface DatabaseInfo {
   id: number;
@@ -18,12 +18,16 @@ interface DatabaseSelectorProps {
   onDatabaseSelect: (databases: number[]) => void;
 }
 
-export function DatabaseSelector({ databases, selectedDatabases, onDatabaseSelect }: DatabaseSelectorProps) {
+export function DatabaseSelector({
+  databases,
+  selectedDatabases,
+  onDatabaseSelect,
+}: DatabaseSelectorProps) {
   const toggleDatabase = (dbId: number) => {
     onDatabaseSelect(
       selectedDatabases.includes(dbId)
         ? selectedDatabases.filter((id) => id !== dbId)
-        : [...selectedDatabases, dbId]
+        : [...selectedDatabases, dbId],
     );
   };
 
@@ -46,4 +50,4 @@ export function DatabaseSelector({ databases, selectedDatabases, onDatabaseSelec
       </div>
     </div>
   );
-} 
+}
