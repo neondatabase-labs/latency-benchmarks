@@ -355,7 +355,7 @@ export function DatabaseSidebar({
                                 )
                                   ? "bg-accent/50"
                                   : group.connectionMethod === "ws" &&
-                                      "bg-callout text-callout-foreground",
+                                      "bg-yellow-300/20 dark:bg-yellow-800/20",
                               )}
                             >
                               <Checkbox

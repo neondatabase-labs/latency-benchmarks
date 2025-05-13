@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Database, Function, Stat } from "@/lib/schema";
+import type { Database, Function } from "@/lib/schema";
 
 interface LatencyData {
   cold: Record<number, Record<number, number>>;
@@ -220,27 +220,8 @@ function LatencyTableClient({
     { region: "South America East 1", code: "sa-east-1" }, // São Paulo (gru1)
   ];
 
-  // Helper function to get the standardized region name
-  const getStandardRegion = (label: string): string => {
-    // First try to match by AWS region code
-    for (const region of regionOrder) {
-      if (label.toLowerCase().includes(region.code.toLowerCase())) {
-        return region.region;
-      }
-    }
-    // Then try to match by region name
-    for (const region of regionOrder) {
-      if (label.toLowerCase().includes(region.region.toLowerCase())) {
-        return region.region;
-      }
-    }
-    return label;
-  };
-
   // Sort region groups by region label
   const sortedRegionGroups = Object.values(regionGroups).sort((a, b) => {
-    const regionA = getStandardRegion(a.regionCode); // Changed from regionLabel to regionCode
-    const regionB = getStandardRegion(b.regionCode); // Changed from regionLabel to regionCode
     const indexA = regionOrder.findIndex(
       (r) => r.code === a.regionCode.toLowerCase(),
     );
@@ -296,15 +277,15 @@ function LatencyTableClient({
     if (latency === null)
       return <span className="text-muted-foreground">N/A</span>;
 
-    let colorClass = "text-status-green";
+    let colorClass = "text-green-800 dark:text-green-400";
     if (queryType === "cold") {
-      if (latency > 200) colorClass = "text-status-yellow";
-      if (latency > 500) colorClass = "text-status-orange";
-      if (latency > 1000) colorClass = "text-status-red";
+      if (latency > 200) colorClass = "text-yellow-800 dark:text-yellow-400";
+      if (latency > 500) colorClass = "text-orange-800 dark:text-orange-400";
+      if (latency > 1000) colorClass = "text-red-800 dark:text-red-400";
     } else {
-      if (latency > 100) colorClass = "text-status-yellow";
-      if (latency > 250) colorClass = "text-status-orange";
-      if (latency > 500) colorClass = "text-status-red";
+      if (latency > 100) colorClass = "text-yellow-800 dark:text-yellow-400";
+      if (latency > 250) colorClass = "text-orange-800 dark:text-orange-400";
+      if (latency > 500) colorClass = "text-red-800 dark:text-red-400";
     }
 
     return <span className={colorClass}>{latency.toFixed(2)}ms</span>;
@@ -340,7 +321,7 @@ function LatencyTableClient({
     <div className="space-y-3 min-w-full w-fit">
       <div className="flex flex-col gap-3">
         <div className="flex items-center space-x-1">
-          <div className="h-3 w-3 rounded-sm bg-matched-region"></div>
+          <div className="h-3 w-3 rounded-sm bg-green-100 dark:bg-green-900"></div>
           <span className="text-xs text-muted-foreground">
             Same region (recommended)
           </span>
@@ -463,7 +444,7 @@ function LatencyTableClient({
                           {group.connectionMethod === "http" ? (
                             <strong>http</strong>
                           ) : (
-                            <strong className="text-callout-foreground bg-callout px-1 rounded">
+                            <strong className="bg-yellow-300/20 dark:bg-yellow-800/20 px-1 rounded">
                               websocket
                             </strong>
                           )}
@@ -542,9 +523,9 @@ function LatencyTableClient({
                           className={cn(
                             "text-center text-xs md:text-base",
                             isSameRegionMatch
-                              ? "bg-matched-region text-matched-region-foreground"
+                              ? "bg-green-100 dark:bg-green-900"
                               : group.connectionMethod === "ws" &&
-                                  "bg-callout text-callout-foreground",
+                                  "bg-yellow-300/20 dark:bg-yellow-800/20",
                             groupIndex !== 0 && "border-l-2 border-l-muted",
                           )}
                         >
@@ -562,9 +543,9 @@ function LatencyTableClient({
                           className={cn(
                             "text-center text-xs md:text-base",
                             isSameRegionMatch
-                              ? "bg-matched-region text-matched-region-foreground"
+                              ? "bg-green-100 dark:bg-green-900"
                               : group.connectionMethod === "ws" &&
-                                  "bg-callout text-callout-foreground",
+                                  "bg-yellow-300/20 dark:bg-yellow-800/20",
                             queryType === "both" && "border-l",
                             groupIndex !== 0 &&
                               queryType !== "both" &&
