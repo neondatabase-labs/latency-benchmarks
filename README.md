@@ -2,6 +2,8 @@
 
 A benchmark measuring latencies from Vercel serverless regions to Neon databases.
 
+Visit it here: [latency-benchmarks-dashboard.vercel.app](https://latency-benchmarks-dashboard.vercel.app/)
+
 ## Components
 
 - [./cron-vercel](./cron-vercel/): API deployed to Vercel that runs every 15 minutes to measure latencies from each Vercel region to all benchmark databases.
