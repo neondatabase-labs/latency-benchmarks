@@ -12,6 +12,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Database, Function } from "@/lib/schema";
 
 interface LatencyData {
@@ -336,20 +342,41 @@ function LatencyTableClient({
             >
               All Queries
             </Button>
-            <Button
-              variant={queryType === "cold" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setQueryType("cold")}
-            >
-              Cold Queries
-            </Button>
-            <Button
-              variant={queryType === "hot" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setQueryType("hot")}
-            >
-              Hot Queries
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={queryType === "cold" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setQueryType("cold")}
+                  >
+                    Cold Queries
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    First query against a scaled-to-zero database, including
+                    startup time
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={queryType === "hot" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setQueryType("hot")}
+                  >
+                    Hot Queries
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Query executed when database is already running</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -444,9 +471,22 @@ function LatencyTableClient({
                           {group.connectionMethod === "http" ? (
                             <strong>http</strong>
                           ) : (
-                            <strong className="bg-yellow-300/20 dark:bg-yellow-800/20 px-1 rounded">
-                              websocket
-                            </strong>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <strong className="bg-yellow-300/20 dark:bg-yellow-800/20 px-1 rounded">
+                                    websocket
+                                  </strong>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    Serverless driver connections over websocket
+                                    require more roundtrips to establish the
+                                    connection
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </div>
                       </div>
