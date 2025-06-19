@@ -2,75 +2,75 @@
   "crons": [
     {
       "path": "/api/arn1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/bom1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/cle1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/cpt1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/dub1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/dxb1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/fra1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/gru1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/hkg1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/hnd1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/iad1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/icn1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/kix1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/lhr1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/pdx1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/sfo1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/sin1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     },
     {
       "path": "/api/syd1",
-      "schedule": "*/15 * * * *"
+      "schedule": "17-59/15 * * * *"
     }
   ]
 } 
