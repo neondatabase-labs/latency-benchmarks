@@ -2,7 +2,7 @@
 
 A benchmark measuring latencies from Vercel serverless regions to Neon databases.
 
-Visit it here: [latency-benchmarks-dashboard.vercel.app](https://latency-benchmarks-dashboard.vercel.app/)
+Visit it here: [latency-benchmarks-dashboard.vercel.app](https://latency-benchmarks-dashboard.vercel.app/demos/regional-latency)
 
 ## Components
 
