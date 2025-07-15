@@ -1,19 +1,10 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
-  /* config options here */
-  rewrites: async () => {
-    return [
-      {
-        source: "/demos/regional-latency",
-        destination: "/",
-      },
-      {
-        source: "/demos/regional-latency/:path*",
-        destination: "/:path*",
-      },
-    ];
-  },
+  assetPrefix: isProd ? process.env.NEXT_PUBLIC_REWRITE_PREFIX : undefined,
+  basePath: isProd ? process.env.NEXT_PUBLIC_REWRITE_PREFIX : undefined,
 };
 
 export default nextConfig;
