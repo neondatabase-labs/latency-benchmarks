@@ -207,8 +207,7 @@ export function QASection() {
                 In addition to HTTP and WebSocket connections via the
                 @neondatabase/serverless driver, this benchmark also measures
                 classic TCP connections using the standard pg library with
-                Vercel's @vercel/functions attachDatabasePool for connection
-                reuse.
+                Vercel's @vercel/functions attachDatabasePool to handle idle connections
               </p>
 
               <h4 className="font-medium mt-3">TCP Connections:</h4>
@@ -220,11 +219,6 @@ export function QASection() {
                 <li>
                   <strong>Connection Method:</strong> Classic TCP protocol over
                   port 5432
-                </li>
-                <li>
-                  <strong>Connection Reuse:</strong> Leverages @vercel/functions
-                  attachDatabasePool to enable connection pooling across Vercel
-                  Fluid Compute requests
                 </li>
                 <li>
                   <strong>Features:</strong> Full PostgreSQL protocol support,
@@ -241,6 +235,31 @@ export function QASection() {
                   from pooling
                 </li>
               </ul>
+
+              <h4 className="font-medium mt-3">Round Trip Comparison:</h4>
+              <p className="mt-1">
+                For the first query after a cold start, the connection methods
+                require different numbers of round trips:
+              </p>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>
+                  <strong>HTTP:</strong> Fastest with 3 round trips
+                </li>
+                <li>
+                  <strong>WebSocket:</strong> 4 round trips
+                </li>
+                <li>
+                  <strong>TCP/PostgreSQL:</strong> 8 round trips
+                </li>
+              </ul>
+
+              <p className="mt-3 font-medium text-primary">
+                Note: This benchmark only measures the first query (e.g., after
+                a serverless function cold start), which heavily favors HTTP's
+                strengths. However, it provides a good way to measure worst-case
+                latencies across different transports on serverless environments
+                connecting to Neon.
+              </p>
 
               <p className="mt-3">
                 TCP connections are measured in select regions (us-west-2 and

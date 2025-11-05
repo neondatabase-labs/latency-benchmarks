@@ -354,10 +354,7 @@ export function DatabaseSidebar({
                                 "flex items-center space-x-2 rounded-md px-2 py-2 hover:bg-accent",
                                 group.databases.some((db) =>
                                   selectedDatabases.includes(db.id),
-                                )
-                                  ? "bg-accent/50"
-                                  : group.connectionMethod === "ws" &&
-                                      "bg-yellow-300/20 dark:bg-yellow-800/20",
+                                ) && "bg-accent/50",
                               )}
                             >
                               <Checkbox
