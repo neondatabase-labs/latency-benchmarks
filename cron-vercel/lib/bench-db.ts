@@ -9,25 +9,15 @@ interface BenchDbConfig {
   connectionMethod: string;
 }
 
-// Cache for TCP connection pools to enable reuse across requests
-const tcpPools = new Map<string, PgPool>();
-
-export function getTcpPool(connectionUrl: string): PgPool {
-  if (!tcpPools.has(connectionUrl)) {
-    const pool = new PgPool({ connectionString: connectionUrl });
-    attachDatabasePool(pool);
-    tcpPools.set(connectionUrl, pool);
-  }
-  return tcpPools.get(connectionUrl)!;
-}
-
 export function getBenchDb({ connectionUrl, connectionMethod }: BenchDbConfig) {
   if (!connectionUrl) {
     throw new Error("Connection URL is required");
   }
 
   if (connectionMethod === "tcp") {
-    return getTcpPool(connectionUrl);
+    const pool = new PgPool({ connectionString: connectionUrl });
+    attachDatabasePool(pool);
+    return pool;
   }
 
   if (connectionMethod === "ws") {

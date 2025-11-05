@@ -343,7 +343,9 @@ export function DatabaseSidebar({
                             @neondatabase/serverless{" "}
                             {methodGroup.connectionMethod === "http"
                               ? "http"
-                              : "websocket"}
+                              : methodGroup.connectionMethod === "tcp"
+                                ? "tcp"
+                                : "websocket"}
                           </h4>
                           {methodGroup.regions.map((group) => (
                             <div
