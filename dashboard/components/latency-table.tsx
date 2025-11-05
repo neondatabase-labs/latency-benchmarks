@@ -419,6 +419,13 @@ function LatencyTableClient({
           >
             WebSocket Only
           </Button>
+          <Button
+            variant={connectionFilter === "tcp" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleConnectionFilterChange("tcp")}
+          >
+            TCP Only
+          </Button>
         </div>
       </div>
       <div className="max-h-[80vh]">
@@ -466,27 +473,52 @@ function LatencyTableClient({
                         <div className="font-normal text-[10px] md:text-xs text-muted-foreground mt-1 break-all">
                           {group.regionCode} via
                           <br />
-                          @neondatabase/serverless
-                          <br />
-                          {group.connectionMethod === "http" ? (
-                            <strong>http</strong>
+                          {group.connectionMethod === "tcp" ? (
+                            <>
+                              pg
+                              <br />
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <strong className="bg-purple-300/20 dark:bg-purple-800/20 px-1 rounded">
+                                      tcp
+                                    </strong>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Classic TCP connection using pg Pool with
+                                      @vercel/functions attachDatabasePool for
+                                      connection reuse
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </>
                           ) : (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <strong className="bg-yellow-300/20 dark:bg-yellow-800/20 px-1 rounded">
-                                    websocket
-                                  </strong>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    Serverless driver connections over websocket
-                                    require more roundtrips to establish the
-                                    connection
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <>
+                              @neondatabase/serverless
+                              <br />
+                              {group.connectionMethod === "http" ? (
+                                <strong>http</strong>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <strong className="bg-yellow-300/20 dark:bg-yellow-800/20 px-1 rounded">
+                                        websocket
+                                      </strong>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        Serverless driver connections over
+                                        websocket require more roundtrips to
+                                        establish the connection
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -564,8 +596,10 @@ function LatencyTableClient({
                             "text-center text-xs md:text-base",
                             isSameRegionMatch
                               ? "bg-green-100 dark:bg-green-900"
-                              : group.connectionMethod === "ws" &&
-                                  "bg-yellow-300/20 dark:bg-yellow-800/20",
+                              : group.connectionMethod === "ws"
+                                ? "bg-yellow-300/20 dark:bg-yellow-800/20"
+                                : group.connectionMethod === "tcp" &&
+                                  "bg-purple-300/20 dark:bg-purple-800/20",
                             groupIndex !== 0 && "border-l-2 border-l-muted",
                           )}
                         >
@@ -584,8 +618,10 @@ function LatencyTableClient({
                             "text-center text-xs md:text-base",
                             isSameRegionMatch
                               ? "bg-green-100 dark:bg-green-900"
-                              : group.connectionMethod === "ws" &&
-                                  "bg-yellow-300/20 dark:bg-yellow-800/20",
+                              : group.connectionMethod === "ws"
+                                ? "bg-yellow-300/20 dark:bg-yellow-800/20"
+                                : group.connectionMethod === "tcp" &&
+                                  "bg-purple-300/20 dark:bg-purple-800/20",
                             queryType === "both" && "border-l",
                             groupIndex !== 0 &&
                               queryType !== "both" &&

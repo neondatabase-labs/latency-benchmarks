@@ -21,4 +21,3 @@ Visit it here: [latency-benchmarks-dashboard.vercel.app](https://latency-benchma
 - Each Vercel region queries databases across all AWS regions available on Neon
 - Two measurements per iteration: cold and hot
 - Special regions (us-west-2, us-east-1) test both HTTP and WebSocket connections
-

@@ -23,8 +23,9 @@ export function QASection() {
                 This benchmark measures the latency between serverless functions
                 and databases across different regions. It specifically focuses
                 on the roundtrip time for executing a simple SELECT query. It
-                also compares different connection methods of the Neon
-                serverless driver: WebSocket vs HTTP.
+                compares different connection methods: HTTP and WebSocket via
+                the Neon serverless driver, and classic TCP connections via the
+                pg library.
               </p>
               <p className="mt-2">The measurements include:</p>
               <ul className="list-disc pl-6 mt-1 space-y-1">
@@ -32,7 +33,8 @@ export function QASection() {
                 <li>Database connection establishment time</li>
                 <li>Query execution and result retrieval time</li>
                 <li>
-                  Performance differences between HTTP and WebSocket connections
+                  Performance differences between HTTP, WebSocket, and TCP
+                  connections
                 </li>
               </ul>
               <p className="mt-2">
@@ -194,6 +196,56 @@ export function QASection() {
                 >
                   Learn more about HTTP vs WebSockets for Postgres queries
                 </a>
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-8">
+            <AccordionTrigger>What about TCP connections?</AccordionTrigger>
+            <AccordionContent>
+              <p>
+                In addition to HTTP and WebSocket connections via the
+                @neondatabase/serverless driver, this benchmark also measures
+                classic TCP connections using the standard pg library with
+                Vercel's @vercel/functions attachDatabasePool for connection
+                reuse.
+              </p>
+
+              <h4 className="font-medium mt-3">TCP Connections:</h4>
+              <ul className="list-disc pl-6 mt-1 space-y-1">
+                <li>
+                  <strong>Driver:</strong> Uses the standard pg Pool library
+                  instead of @neondatabase/serverless
+                </li>
+                <li>
+                  <strong>Connection Method:</strong> Classic TCP protocol over
+                  port 5432
+                </li>
+                <li>
+                  <strong>Connection Reuse:</strong> Leverages @vercel/functions
+                  attachDatabasePool to enable connection pooling across Vercel
+                  Fluid Compute requests
+                </li>
+                <li>
+                  <strong>Features:</strong> Full PostgreSQL protocol support,
+                  including all features and extensions
+                </li>
+                <li>
+                  <strong>Use Case:</strong> Traditional approach for long-lived
+                  applications where connection pooling can be maintained
+                </li>
+                <li>
+                  <strong>Performance:</strong> Performance depends on
+                  connection reuse - cold connections require full TCP handshake
+                  and PostgreSQL authentication, while warm connections benefit
+                  from pooling
+                </li>
+              </ul>
+
+              <p className="mt-3">
+                TCP connections are measured in select regions (us-west-2 and
+                us-east-1) to compare the traditional approach with the
+                serverless-optimized HTTP and WebSocket methods.
               </p>
             </AccordionContent>
           </AccordionItem>

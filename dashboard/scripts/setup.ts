@@ -12,10 +12,14 @@ async function createNeonProject(
   platform: string,
   platformRegion: string,
   dbRegion: string,
-  connectionMethod: "ws" | "http",
+  connectionMethod: "ws" | "http" | "tcp",
 ): Promise<{ connectionUrl: string; projectId: string }> {
   const projectName = `benchmarking-from-${platform}-${platformRegion}-to-${dbRegion}-via-${
-    connectionMethod === "ws" ? "ws" : "http"
+    connectionMethod === "ws"
+      ? "ws"
+      : connectionMethod === "tcp"
+        ? "tcp"
+        : "http"
   }`;
   console.log(`Creating Neon project: ${projectName}`);
 
@@ -176,7 +180,7 @@ async function main() {
       { code: "sa-east-1", label: "AWS South America East 1 (São Paulo)" },
     ];
 
-    // Regions that should have both HTTP and WebSocket connections
+    // Regions that should have HTTP, WebSocket, and TCP connections
     const specialRegions = ["us-west-2", "us-east-1"];
 
     console.log("Creating databases...");
@@ -226,6 +230,26 @@ async function main() {
             connectionMethod: "ws",
             connectionUrl: wsConnectionUrl,
             neonProjectId: wsProjectId,
+          });
+
+          // Add TCP connection (using pg Pool with attachDatabasePool)
+          const { connectionUrl: tcpConnectionUrl, projectId: tcpProjectId } =
+            await createNeonProject(
+              fn.platform,
+              vercelRegionCode,
+              region.code,
+              "tcp",
+            );
+
+          neonDatabases.push({
+            name: "Neon Postgres",
+            provider: "neon",
+            regionCode: region.code,
+            regionLabel: region.label,
+            functionId: fn.id,
+            connectionMethod: "tcp",
+            connectionUrl: tcpConnectionUrl,
+            neonProjectId: tcpProjectId,
           });
         }
       }
