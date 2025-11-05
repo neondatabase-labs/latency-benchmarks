@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { neon } from '@neondatabase/serverless';
+import { neon } from "@neondatabase/serverless";
 
 // Only initialize the database connection at runtime
 const getSql = () => {
@@ -15,12 +15,12 @@ interface Database {
   provider: string;
   region_code: string;
   region_label: string;
-  connection_method: 'ws' | 'http';
+  connection_method: "ws" | "http" | "tcp";
   connection_url: string;
   neon_project_id: string;
 }
 
-type Platform = 'vercel';
+type Platform = "vercel";
 
 interface Function {
   id: number;
@@ -36,7 +36,7 @@ interface Stat {
   function_id: number;
   database_id: number;
   latency_ms: number;
-  query_type: 'cold' | 'hot';
+  query_type: "cold" | "hot";
 }
 
 /**
@@ -44,24 +44,26 @@ interface Stat {
  */
 export async function getAllDatabases(functionId: number): Promise<Database[]> {
   const sql = getSql();
-  const result = await sql`
+  const result = (await sql`
     SELECT id, name, provider, region_code, region_label, connection_method, connection_url, neon_project_id
     FROM databases
     WHERE function_id = ${functionId}
-  ` as Database[];
+  `) as Database[];
   return result;
 }
 
 /**
  * Get a function by region code
  */
-export async function getFunctionByRegionCode(regionCode: string): Promise<Function> {
+export async function getFunctionByRegionCode(
+  regionCode: string,
+): Promise<Function> {
   const sql = getSql();
-  const result = await sql`
+  const result = (await sql`
     SELECT id, name, region_code, region_label, platform
     FROM functions
     WHERE region_code = ${regionCode}
-  ` as Function[];
+  `) as Function[];
   return result[0];
 }
 
@@ -72,13 +74,13 @@ export async function addLatencyMeasurement(
   functionId: number,
   databaseId: number,
   latencyMs: number,
-  queryType: 'cold' | 'hot'
+  queryType: "cold" | "hot",
 ): Promise<Stat> {
   const sql = getSql();
-  const result = await sql`
+  const result = (await sql`
     INSERT INTO stats (date_time, function_id, database_id, latency_ms, query_type)
     VALUES (NOW(), ${functionId}, ${databaseId}, ${latencyMs}, ${queryType})
     RETURNING id, date_time, function_id, database_id, latency_ms, query_type
-  ` as Stat[];
+  `) as Stat[];
   return result[0];
 }

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."connection_method" ADD VALUE 'tcp';

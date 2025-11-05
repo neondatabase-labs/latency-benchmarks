@@ -14,7 +14,11 @@ import { z } from "zod";
 // Create enums
 export const queryTypeEnum = pgEnum("query_type", ["cold", "hot"]);
 export const platformEnum = pgEnum("platform", ["vercel"]);
-export const connectionMethodEnum = pgEnum("connection_method", ["http", "ws"]);
+export const connectionMethodEnum = pgEnum("connection_method", [
+  "http",
+  "ws",
+  "tcp",
+]);
 
 // Databases table
 export const databases = pgTable(
